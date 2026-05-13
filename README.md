@@ -16,10 +16,39 @@
 
 ## 시작하기
 
+### 사전 준비물
+
+| 필요한 것 | 확인 명령 |
+|---|---|
+| Flutter SDK 3.41.x | `flutter --version` |
+| Android SDK + Platform 35 | `flutter doctor` |
+| JDK 17 (`android/app/build.gradle.kts`에서 강제) | `java -version` |
+| Android 에뮬레이터 또는 실기기 | `flutter devices` |
+
+`flutter doctor`로 부족한 항목을 한 번에 확인할 수 있다.
+
+### 실행
+
 ```bash
 flutter pub get
 flutter run
 ```
+
+### 트러블슈팅: `Error connecting to the service protocol`
+
+Flutter SDK / Android SDK 업그레이드 직후 첫 빌드에서 가끔 VM Service 연결이 실패할 수 있다 (`flutter_secure_storage`의 네이티브 초기화와 핸드셰이크 타이밍 충돌). 다음 순서로 해결:
+
+```bash
+flutter clean
+flutter pub get
+flutter run --host-vmservice-port=8888 --disable-service-auth-codes
+```
+
+- `flutter clean`: 꼬인 빌드 캐시(`build/`, `.dart_tool/`) 비움
+- `--host-vmservice-port=8888`: 랜덤 포트 대신 고정 포트 사용
+- `--disable-service-auth-codes`: WebSocket 인증 토큰 협상 생략
+
+두 번째 빌드부터는 캐시가 따뜻해져서 `flutter run`만으로 정상 동작한다. `--disable-service-auth-codes`는 보안상 같은 PC 개발 환경에서만 사용 (외부 네트워크 노출 X).
 
 ### 백엔드 URL
 
