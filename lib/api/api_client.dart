@@ -120,7 +120,40 @@ class ApiClient {
   static Future<http.Response> get(String path) => request('GET', path);
   static Future<http.Response> post(String path, {Object? body}) => request('POST', path, body: body);
   static Future<http.Response> put(String path, {Object? body}) => request('PUT', path, body: body);
+  static Future<http.Response> patch(String path, {Object? body}) => request('PATCH', path, body: body);
   static Future<http.Response> delete(String path) => request('DELETE', path);
+
+  // 이미지 등 파일 업로드용 multipart 요청. 401 시 refresh 후 1회 재시도.
+  static Future<http.Response> uploadFile(
+    String path, {
+    required String fieldName,
+    required String filePath,
+  }) async {
+    final uri = Uri.parse(path.startsWith('http') ? path : '$baseUrl$path');
+
+    Future<http.Response> doRequest() async {
+      final token = await AuthStorage.readAccessToken();
+      final req = http.MultipartRequest('POST', uri);
+      if (token != null && token.isNotEmpty) {
+        req.headers['Authorization'] = 'Bearer $token';
+      }
+      req.files.add(await http.MultipartFile.fromPath(fieldName, filePath));
+      final streamed = await req.send();
+      return http.Response.fromStream(streamed);
+    }
+
+    var res = await doRequest();
+    if (res.statusCode == 401 || res.statusCode == 403) {
+      final refreshed = await _refreshAccessToken();
+      if (refreshed) {
+        res = await doRequest();
+      } else {
+        await AuthStorage.clear();
+        _onLoggedOut.add(null);
+      }
+    }
+    return res;
+  }
 
   // 서버에 refresh token 폐기까지 보내는 로그아웃 헬퍼
   static Future<void> logoutOnServer() async {

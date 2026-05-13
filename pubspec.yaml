@@ -37,6 +37,8 @@ dependencies:
   http: ^1.6.0
   flutter_secure_storage: ^10.1.0
   shared_preferences: ^2.5.5
+  lucide_icons_flutter: ^3.0.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

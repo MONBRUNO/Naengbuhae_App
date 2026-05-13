@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../api/auth_storage.dart';
-import 'home_screen.dart';
+import 'forgot_password_screen.dart';
+import 'main_scaffold.dart';
+import 'signup_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -59,7 +61,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const MainScaffold()),
       );
     } catch (e) {
       _showSnackBar('서버 연결에 실패했습니다. 백엔드가 켜져있는지 확인해주세요.');
@@ -113,7 +115,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _submitting ? null : _handleSubmit,
                     child: Text(_submitting ? '로그인 중...' : '로그인'),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 12),
+                  // 비밀번호 잊은 사용자용 — 메일로 재설정 링크 받기
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                      ),
+                      child: const Text(
+                        '비밀번호 잊으셨나요?',
+                        style: TextStyle(
+                          color: Color(0xFF6B7280),
+                          fontSize: 13,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -139,8 +158,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(color: Colors.grey)),
                       GestureDetector(
                         onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                              content: Text('회원가입 화면은 추후 추가 예정')));
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const SignupScreen()),
+                          );
                         },
                         child: const Text('회원가입',
                             style: TextStyle(

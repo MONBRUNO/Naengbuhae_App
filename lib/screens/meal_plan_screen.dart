@@ -1,0 +1,436 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+
+import '../api/api_client.dart';
+import '../utils/format.dart';
+import '../widgets/bar_chart.dart';
+import 'recipes_screen.dart';
+
+const _accentGreen = Color(0xFFCDFF00);
+
+const _daysOfWeek = ['월', '화', '수', '목', '금', '토', '일'];
+
+class _MealPlanItem {
+  final String day;
+  final String breakfast;
+  final String lunch;
+  final String dinner;
+  final double totalCalories;
+  final double totalProtein;
+  final double totalCarbs;
+  final double totalFat;
+
+  _MealPlanItem({
+    required this.day,
+    required this.breakfast,
+    required this.lunch,
+    required this.dinner,
+    required this.totalCalories,
+    required this.totalProtein,
+    required this.totalCarbs,
+    required this.totalFat,
+  });
+}
+
+// 웹의 MealPlan.tsx에 대응.
+class MealPlanScreen extends StatefulWidget {
+  const MealPlanScreen({super.key});
+
+  @override
+  State<MealPlanScreen> createState() => _MealPlanScreenState();
+}
+
+class _MealPlanScreenState extends State<MealPlanScreen> {
+  bool _loading = true;
+  String? _error;
+  List<Map<String, dynamic>> _recipes = [];
+  List<Map<String, dynamic>> _matches = [];
+  bool _hasIngredients = true;
+  int _selectedDays = 7;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final results = await Future.wait([
+        ApiClient.get('/api/recipes'),
+        ApiClient.get('/api/recipes/recommendations'),
+        ApiClient.get('/api/ingredients'),
+      ]);
+      if (results[0].statusCode != 200 || results[1].statusCode != 200) {
+        setState(() => _error = '레시피 조회 실패');
+        return;
+      }
+      final recs = (jsonDecode(utf8.decode(results[0].bodyBytes)) as List).cast<Map<String, dynamic>>();
+      final matches = (jsonDecode(utf8.decode(results[1].bodyBytes)) as List).cast<Map<String, dynamic>>();
+      final ingredients = (jsonDecode(utf8.decode(results[2].bodyBytes)) as List);
+      setState(() {
+        _recipes = recs;
+        _matches = matches;
+        _hasIngredients = ingredients.isNotEmpty;
+      });
+    } catch (e) {
+      setState(() => _error = '서버 연결 실패: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  List<_MealPlanItem> _generateMealPlan() {
+    if (_recipes.isEmpty) return [];
+
+    final makeable = _matches
+        .where((m) => ((m['matchRate'] ?? 0) as num) >= 50)
+        .map((m) => (m['recipe'] as Map).cast<String, dynamic>())
+        .toList();
+
+    Map<String, dynamic>? findByCategory(List<String> categories) {
+      try {
+        return makeable.firstWhere((r) => categories.contains(r['category']?.toString()));
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final breakfastBase = findByCategory(['간식', '음료']) ?? (_recipes.isNotEmpty ? _recipes[0] : null);
+    final lunchBase = findByCategory(['밥/면', '반찬']) ?? (_recipes.length > 1 ? _recipes[1] : (_recipes.isNotEmpty ? _recipes[0] : null));
+
+    final plan = <_MealPlanItem>[];
+    for (var i = 0; i < _selectedDays; i++) {
+      final dinner = makeable.isNotEmpty
+          ? makeable[(i * 2) % makeable.length]
+          : (_recipes.length > 2 ? _recipes[2] : (_recipes.isNotEmpty ? _recipes.last : null));
+
+      final bn = (breakfastBase?['nutrition'] as Map?)?.cast<String, dynamic>();
+      final ln = (lunchBase?['nutrition'] as Map?)?.cast<String, dynamic>();
+      final dn = (dinner?['nutrition'] as Map?)?.cast<String, dynamic>();
+
+      double sum(String key) =>
+          _num(bn?[key]) + _num(ln?[key]) + _num(dn?[key]);
+
+      plan.add(_MealPlanItem(
+        day: _daysOfWeek[i % 7],
+        breakfast: breakfastBase?['name']?.toString() ?? '-',
+        lunch: lunchBase?['name']?.toString() ?? '-',
+        dinner: dinner?['name']?.toString() ?? '-',
+        totalCalories: sum('calories'),
+        totalProtein: sum('protein'),
+        totalCarbs: sum('carbs'),
+        totalFat: sum('fat'),
+      ));
+    }
+    return plan;
+  }
+
+  double _num(dynamic v) => v is num ? v.toDouble() : double.tryParse(v?.toString() ?? '') ?? 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: const Text('식단 추천', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 20)),
+      ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    if (_error != null) {
+      return Center(child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(_error!),
+          const SizedBox(height: 16),
+          OutlinedButton(onPressed: _fetch, child: const Text('다시 시도')),
+        ],
+      ));
+    }
+
+    final mealPlan = _generateMealPlan();
+    final totalCalories = mealPlan.fold<double>(0, (s, d) => s + d.totalCalories);
+    final totalProtein = mealPlan.fold<double>(0, (s, d) => s + d.totalProtein);
+
+    return RefreshIndicator(
+      onRefresh: _fetch,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        children: [
+          // 부제
+          const Text('보유 식재료 기반 균형잡힌 식단',
+              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+          const SizedBox(height: 16),
+
+          // 기간 선택
+          Row(
+            children: [
+              _periodChip('오늘', 1),
+              const SizedBox(width: 8),
+              _periodChip('3일', 3),
+              const SizedBox(width: 8),
+              _periodChip('일주일', 7),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // 영양 요약 (lime-yellow 그라데이션)
+          if (mealPlan.isNotEmpty) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFF7FEE7), Color(0xFFFEFCE8)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFD9F99D)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome, size: 20, color: Color(0xFF4D7C0F)),
+                      const SizedBox(width: 8),
+                      Text(
+                        _selectedDays == 1 ? '오늘 영양 요약' : '$_selectedDays일간 영양 요약',
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(child: _summaryStat('총 칼로리', formatThousands(totalCalories), 'kcal', '평균 ${formatThousands(totalCalories / _selectedDays)}kcal/일')),
+                      Expanded(child: _summaryStat('총 단백질', '${totalProtein.toInt()}', 'g', '평균 ${(totalProtein / _selectedDays).toInt()}g/일')),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 영양소 균형 그래프 (orange-yellow)
+          if (mealPlan.isNotEmpty && _selectedDays >= 3) ...[
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFF7ED), Color(0xFFFEFCE8)],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFFED7AA)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('일별 영양소 균형 (g)',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  SimpleBarChart(
+                    height: 160,
+                    items: mealPlan.map((d) => BarItem(
+                      d.day,
+                      (d.totalProtein + d.totalCarbs + d.totalFat).toInt(),
+                      const Color(0xFF8B5CF6),
+                    )).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 12,
+                    children: [
+                      _legend('단백질+탄수화물+지방', const Color(0xFF8B5CF6)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // 식단표
+          if (mealPlan.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
+              child: Column(
+                children: [
+                  const Icon(Icons.restaurant_outlined, size: 48, color: Color(0xFFD1D5DB)),
+                  const SizedBox(height: 12),
+                  const Text('식단을 생성할 레시피가 부족합니다',
+                      style: TextStyle(color: Color(0xFF9CA3AF))),
+                  const SizedBox(height: 4),
+                  const Text('레시피를 추가하면 식단이 자동 생성돼요',
+                      style: TextStyle(fontSize: 12, color: Color(0xFFD1D5DB))),
+                ],
+              ),
+            )
+          else ...[
+            const Text('식단표', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 12),
+            ...mealPlan.map(_dayCard),
+          ],
+
+          // 식재료 없음 안내
+          if (!_hasIngredients) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEFCE8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFFEF08A)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text('더 정확한 식단 추천을 위해',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                  SizedBox(height: 4),
+                  Text('보유 식재료를 등록하면 맞춤 식단을 추천해드려요',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _periodChip(String label, int days) {
+    final selected = _selectedDays == days;
+    return GestureDetector(
+      onTap: () => setState(() => _selectedDays = days),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? _accentGreen : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(label, style: TextStyle(
+          fontSize: 13,
+          color: selected ? Colors.black : const Color(0xFF6B7280),
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+        )),
+      ),
+    );
+  }
+
+  Widget _summaryStat(String label, String value, String unit, String avg) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        const SizedBox(height: 4),
+        RichText(
+          text: TextSpan(
+            style: const TextStyle(color: Colors.black),
+            children: [
+              TextSpan(text: value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+              TextSpan(text: ' $unit', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            ],
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(avg, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+      ],
+    );
+  }
+
+  Widget _legend(String label, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+      ],
+    );
+  }
+
+  Widget _dayCard(_MealPlanItem day) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF6B7280)),
+              const SizedBox(width: 8),
+              Text('${day.day}요일',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+              const Spacer(),
+              Text('${formatThousands(day.totalCalories)}kcal',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _mealRow('아침', day.breakfast),
+          _mealRow('점심', day.lunch),
+          _mealRow('저녁', day.dinner),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Text('단백질 ${day.totalProtein.toInt()}g',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+              const Spacer(),
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const RecipesScreen()),
+                ),
+                child: Row(
+                  children: const [
+                    Text('레시피 보기',
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                    Icon(Icons.chevron_right, size: 14),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _mealRow(String label, String meal) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          SizedBox(width: 40,
+              child: Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)))),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(meal, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'api/auth_storage.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_scaffold.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +60,7 @@ class _AuthGate extends StatelessWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        return snapshot.data == true ? const HomeScreen() : const LoginScreen();
+        return snapshot.data == true ? const MainScaffold() : const LoginScreen();
       },
     );
   }

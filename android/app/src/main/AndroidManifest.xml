@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 네트워크 호출 권한 -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- 카메라/갤러리 사용 (image_picker) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:label="naengbuhae_app"
