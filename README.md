@@ -15,12 +15,13 @@
 1. **유통기한 임박 알림** — 매일 오전 9시, D-3 ~ D-0 항목을 본문에 묶어서 표시 (로컬 알림, 앱 안 열어도 동작)
 2. **식단 추천 알림** — 사용자가 설정한 아침/점심/저녁 시각의 **10분 전**에 "오늘 점심 식단: ㅇㅇㅇ" 형태 (로컬 알림)
 3. **멤버/초대 푸시** — 누가 내 냉장고에 합류하면 기존 멤버 전원에게, 본인이 제거되면 본인에게 (FCM)
-4. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
-5. **알림 탭 → 해당 화면 진입** — 유통기한은 식재료 탭, 식단은 식단 화면, 멤버 알림은 냉장고 관리 화면으로
+4. **식재료 추가/삭제 푸시** — 가족 멤버 누가 사과 5개를 넣으면 나머지 전원에게, 다 떨어졌다고 지우면 나머지 전원에게 (FCM)
+5. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
+6. **알림 탭 → 해당 화면 진입** — 유통기한·식재료 알림은 식재료 탭, 식단은 식단 화면, 멤버 알림은 냉장고 관리 화면으로
 
 로그인:
 
-6. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
+7. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
 
 ---
 
@@ -55,7 +56,7 @@ await NotificationService.rescheduleMealNotifications(
 
 ---
 
-### 2) FCM (멤버/초대 푸시)
+### 2) FCM (서버 트리거 푸시)
 
 `firebase_core` + `firebase_messaging`.
 
@@ -66,7 +67,16 @@ await NotificationService.rescheduleMealNotifications(
 - 포그라운드 메시지는 로컬 알림으로 띄움 (FCM이 포그라운드에선 자동 표시 안 함)
 - **`google-services.json` 미배치여도 앱은 정상 기동** — `Firebase.initializeApp()` 실패만 로깅하고 로컬 알림만 동작
 
-서버 측은 [백엔드 README](https://github.com/impactice/Naengbuhae_Team_backend) 참고. `FridgeService.joinByCode` / `removeMember`에서 푸시 발송.
+서버 측은 [백엔드 README](https://github.com/impactice/Naengbuhae_Team_backend) 참고. 현재 발송 시점:
+
+| 트리거 | 수신자 | 본문 예 | route |
+|---|---|---|---|
+| 멤버 합류 (`FridgeService.joinByCode`) | 기존 멤버 전원 | "OO님이 'XX'에 참여했습니다" | `fridge` |
+| 멤버 제거 (`FridgeService.removeMember`) | 제거된 본인 | "'XX'에서 더 이상 멤버가 아닙니다" | `fridge` |
+| 식재료 추가 (`IngredientService.saveIngredient`) | 같은 냉장고 다른 멤버 | "OO님이 'XX'에 사과 5개를 넣었어요" | `ingredients` |
+| 식재료 삭제 (`IngredientService.deleteIngredient`) | 같은 냉장고 다른 멤버 | "OO님이 'XX'에서 사과를 비웠어요" | `ingredients` |
+
+행위자 본인은 항상 제외 — 자기가 한 행동을 자기가 받을 필요 없음. 멤버가 본인 1명이면 발송 대상 0명이라 무음.
 
 ---
 
