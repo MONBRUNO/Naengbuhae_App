@@ -9,13 +9,18 @@
 
 ## 🆕 이번 작업 정리 (2026-05-14)
 
-알림 기능 통째로 추가.
+**알림 기능 + OAuth 소셜 로그인.**
 
+알림:
 1. **유통기한 임박 알림** — 매일 오전 9시, D-3 ~ D-0 항목을 본문에 묶어서 표시 (로컬 알림, 앱 안 열어도 동작)
 2. **식단 추천 알림** — 사용자가 설정한 아침/점심/저녁 시각의 **10분 전**에 "오늘 점심 식단: ㅇㅇㅇ" 형태 (로컬 알림)
 3. **멤버/초대 푸시** — 누가 내 냉장고에 합류하면 기존 멤버 전원에게, 본인이 제거되면 본인에게 (FCM)
 4. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
 5. **알림 탭 → 해당 화면 진입** — 유통기한은 식재료 탭, 식단은 식단 화면, 멤버 알림은 냉장고 관리 화면으로
+
+로그인:
+
+6. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
 
 ---
 
@@ -121,6 +126,42 @@ Message.builder()
     .putAllData(Map.of("route", "fridge"))   // 앱이 이 값으로 분기
     .build();
 ```
+
+---
+
+### 6) OAuth 소셜 로그인
+
+`webview_flutter`로 백엔드의 OAuth 흐름을 인앱 WebView에서 진행 — 토큰을 콜백 URL에서 가로채는 방식.
+
+**`lib/screens/oauth_webview_screen.dart`**
+
+```
+1. <baseUrl>/oauth2/authorization/{provider} 로드
+2. Spring이 카카오/구글/네이버 로그인 페이지로 302 redirect
+3. 사용자 로그인 → 제공자가 <baseUrl>/login/oauth2/code/{provider} 콜백
+4. OAuth2SuccessHandler가 frontend-redirect URL로
+   ?token=...&refreshToken=...&needsAdditionalInfo=... 붙여 302
+5. WebView가 그 URL을 로드하기 직전 NavigationDelegate에서 가로채서 토큰 추출 → pop
+```
+
+`oauth/callback` 패턴만 인식하므로 frontend-redirect URL 자체는 실제 도달 가능할 필요 없음 (localhost:5173이라도 무관).
+
+**`lib/screens/login_screen.dart` 소셜 버튼 핸들러**
+
+```dart
+final result = await Navigator.push<OAuthResult>(...);
+await AuthStorage.save(accessToken: result.accessToken, refreshToken: result.refreshToken);
+NotificationService.requestPermission();
+FcmService.registerCurrentToken();
+Navigator.pushReplacement(MaterialScaffold(...));
+```
+
+**전제**
+
+- 백엔드의 `KAKAO_CLIENT_ID` / `GOOGLE_CLIENT_ID` / `NAVER_CLIENT_ID` 등 `.env` 설정
+- 각 제공자 개발자 콘솔에 redirect URI 등록: `<baseUrl>/login/oauth2/code/{provider}`
+- 개발 시 안드로이드 에뮬레이터의 `10.0.2.2:8080`은 일부 제공자(특히 카카오)가 redirect URI로 거부 → ngrok HTTPS 터널 또는 배포된 서버 URL 사용 권장
+- 추가 정보 미입력 시(신체정보 등) 백엔드가 `needsAdditionalInfo=true`로 알려줌 → 메인 진입 후 프로필 미완성 배너로 노출됨
 
 ---
 
@@ -287,6 +328,7 @@ class FridgeContext {
 - 캐시: `shared_preferences` (선택된 냉장고 / 알림 설정)
 - 아이콘: `lucide_icons_flutter` (웹과 통일된 아이콘셋)
 - 알림: `flutter_local_notifications` + `timezone` (로컬) / `firebase_messaging` (푸시)
+- OAuth: `webview_flutter` (카카오/구글/네이버 인앱 WebView)
 
 ## 시작하기
 
@@ -353,9 +395,10 @@ lib/
 │   ├── notification_settings.dart     # 알림 설정 (SharedPreferences + ValueNotifier)
 │   └── tab_index.dart                 # MainScaffold 탭 인덱스 외부 제어용
 ├── screens/
-│   ├── login_screen.dart              # 로그인
+│   ├── login_screen.dart              # 로그인 (+ OAuth 소셜 버튼)
 │   ├── signup_screen.dart             # 회원가입
 │   ├── forgot_password_screen.dart    # 비밀번호 찾기
+│   ├── oauth_webview_screen.dart      # OAuth 인앱 WebView (콜백 URL에서 토큰 가로챔)
 │   ├── main_scaffold.dart             # 5탭 IndexedStack + 하단 네비
 │   ├── dashboard_screen.dart          # 홈
 │   ├── ingredients_screen.dart        # 식재료 목록
@@ -401,8 +444,8 @@ lib/
 
 ## 추후 작업
 
-- [ ] OAuth 소셜 로그인 (카카오/구글/네이버 WebView 또는 `flutter_appauth`)
+- [x] OAuth 소셜 로그인 (카카오/구글/네이버 WebView)
 - [x] FCM 푸시 알림 (~~유통기한 임박 — D-1, 당일~~ → 유통기한은 로컬로 전환, FCM은 멤버/초대 이벤트 전용)
 - [x] 알림 탭 시 해당 화면으로 진입 (payload + FCM data.route 분기)
+- [x] 이메일 인증 안 한 사용자에게 프로필 화면에서 배너 + 재발송 버튼 (`_EmailVerificationBanner`)
 - [ ] 비밀번호 재설정 메일 링크 → 앱 딥링크 (`uni_links`)
-- [ ] 이메일 인증 안 한 사용자에게 프로필 화면에서 배너 + 재발송 버튼

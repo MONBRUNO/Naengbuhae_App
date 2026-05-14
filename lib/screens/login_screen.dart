@@ -8,6 +8,7 @@ import '../services/fcm_service.dart';
 import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
 import 'main_scaffold.dart';
+import 'oauth_webview_screen.dart';
 import 'signup_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
@@ -150,13 +151,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Expanded(child: Divider()),
                   ]),
                   const SizedBox(height: 16),
-                  // 소셜 로그인은 OAuth WebView 처리가 필요 — 추후 연결.
-                  // 기능적 placeholder만.
-                  _socialButton('카카오로 시작하기', const Color(0xFFFEE500), Colors.black),
+                  _socialButton('카카오로 시작하기', const Color(0xFFFEE500), Colors.black,
+                      provider: 'kakao'),
                   const SizedBox(height: 8),
-                  _socialButton('네이버로 시작하기', const Color(0xFF03C75A), Colors.white),
+                  _socialButton('네이버로 시작하기', const Color(0xFF03C75A), Colors.white,
+                      provider: 'naver'),
                   const SizedBox(height: 8),
-                  _socialButton('구글로 시작하기', Colors.white, Colors.black, border: true),
+                  _socialButton('구글로 시작하기', Colors.white, Colors.black,
+                      border: true, provider: 'google'),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -216,14 +218,17 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _socialButton(String label, Color bg, Color fg, {bool border = false}) {
+  Widget _socialButton(
+    String label,
+    Color bg,
+    Color fg, {
+    bool border = false,
+    required String provider,
+  }) {
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('소셜 로그인은 OAuth WebView 연결 후 사용 가능 (추후)')));
-        },
+        onPressed: () => _socialLogin(provider),
         style: OutlinedButton.styleFrom(
           backgroundColor: bg,
           foregroundColor: fg,
@@ -233,6 +238,29 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
+    );
+  }
+
+  // OAuth WebView 열어 토큰 받아오기. 받으면 로컬 저장 + 알림 권한/FCM 등록 +
+  // 메인으로 이동. 추가 정보가 필요한 경우 백엔드가 needsAdditionalInfo=true로 알려주는데
+  // 일단 메인에서 프로필 미완성 배너로 노출되므로 별도 분기 없이 진입.
+  Future<void> _socialLogin(String provider) async {
+    final result = await Navigator.of(context).push<OAuthResult>(
+      MaterialPageRoute(builder: (_) => OAuthWebViewScreen(provider: provider)),
+    );
+    if (result == null) return; // 사용자가 도중에 닫음
+
+    await AuthStorage.save(
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+    );
+    // ignore: unawaited_futures
+    NotificationService.requestPermission();
+    // ignore: unawaited_futures
+    FcmService.registerCurrentToken();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const MainScaffold()),
     );
   }
 }

@@ -47,6 +47,9 @@ dependencies:
   firebase_core: ^3.8.0
   firebase_messaging: ^15.1.5
 
+  # OAuth 소셜 로그인 — 백엔드 /oauth2/authorization/{provider} WebView로 진행
+  webview_flutter: ^4.10.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
