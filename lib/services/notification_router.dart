@@ -17,7 +17,9 @@ class NotificationRouter {
   static void route(String? key) {
     if (key == null) return;
     switch (key) {
+      // 로컬 유통기한 알림 / FCM 식재료 추가·삭제 — 둘 다 식재료 탭으로
       case 'expiry':
+      case 'ingredients':
         TabIndex.select(_ingredientsTabIndex);
         break;
       case 'meal':

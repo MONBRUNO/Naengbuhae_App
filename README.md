@@ -107,6 +107,7 @@ await NotificationService.rescheduleMealNotifications(
 | 로컬 (유통기한) | payload `expiry` | 식재료 탭 (index 1) |
 | 로컬 (식단) | payload `meal` | `MealPlanScreen` push |
 | FCM (멤버/초대) | `data.route=fridge` | `FridgeManagementScreen` push |
+| FCM (식재료 추가/삭제) | `data.route=ingredients` | 식재료 탭 (index 1) |
 
 **진입 상태 3가지 모두 커버**:
 - **포그라운드** — 사용자가 이미 앱 보고 있으므로 자동 라우팅 안 함 (알림만 띄움)
