@@ -220,6 +220,8 @@ Navigator.pushReplacement(MaterialScaffold(...));
 
 웹 프론트(`Naengbuhae_Team/Smart Ingredient Management App/src/app/pages/Ingredients.tsx`)도 동일 UX로 동시에 추가.
 
+> 알림 센터·가족 활동 통계도 웹에 함께 붙임 (`/notifications`, `/family-activity`). [Naengbuhae_Team README](https://github.com/impactice/Naengbuhae_Team) 참고.
+
 ---
 
 ### 9) 가족 활동 통계
