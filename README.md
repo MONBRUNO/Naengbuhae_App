@@ -9,7 +9,7 @@
 
 ## 🆕 이번 작업 정리 (2026-05-14)
 
-**알림 기능 + OAuth 소셜 로그인.**
+**알림 기능 + OAuth 소셜 로그인 + 식재료 검색.**
 
 알림:
 1. **유통기한 임박 알림** — 매일 오전 9시, D-3 ~ D-0 항목을 본문에 묶어서 표시 (로컬 알림, 앱 안 열어도 동작)
@@ -23,6 +23,10 @@
 로그인:
 
 8. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
+
+식재료 화면:
+
+9. **이름 검색 + 만료된 것만 보기 토글** — 카테고리·보관·정렬 위에 검색창, 아래에 만료 토글 chip (D-day < 0)
 
 ---
 
@@ -199,6 +203,18 @@ Navigator.pushReplacement(MaterialScaffold(...));
 - 각 제공자 개발자 콘솔에 redirect URI 등록: `<baseUrl>/login/oauth2/code/{provider}`
 - 개발 시 안드로이드 에뮬레이터의 `10.0.2.2:8080`은 일부 제공자(특히 카카오)가 redirect URI로 거부 → ngrok HTTPS 터널 또는 배포된 서버 URL 사용 권장
 - 추가 정보 미입력 시(신체정보 등) 백엔드가 `needsAdditionalInfo=true`로 알려줌 → 메인 진입 후 프로필 미완성 배너로 노출됨
+
+---
+
+### 8) 식재료 검색 + 만료 토글
+
+`ingredients_screen.dart`에 `_searchQuery`와 `_showExpiredOnly` 상태 추가.
+
+- **검색창**: 카테고리/보관/정렬 필터 위에 `TextField` + suffix clear 버튼. `name.toLowerCase().contains(query)` 부분 일치
+- **만료 토글**: 필터 row 아래 체크 chip. `calculateDDay(...) < 0` 항목만 (오늘 만료는 제외)
+- `_filtered` getter에 두 조건 합산 (카테고리 → 보관 → 검색 → 만료 → 정렬)
+
+웹 프론트(`Naengbuhae_Team/Smart Ingredient Management App/src/app/pages/Ingredients.tsx`)도 동일 UX로 동시에 추가.
 
 ---
 

@@ -34,6 +34,9 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   String _categoryFilter = '전체';
   String _storageFilter = '전체';
   _SortBy _sort = _SortBy.expiry;
+  String _searchQuery = '';
+  bool _showExpiredOnly = false;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -45,6 +48,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   @override
   void dispose() {
     FridgeContext.selected.removeListener(_fetch);
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -98,9 +102,18 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   }
 
   List<Map<String, dynamic>> get _filtered {
+    final query = _searchQuery.trim().toLowerCase();
     final list = _items.where((i) {
       if (_categoryFilter != '전체' && i['category']?.toString() != _categoryFilter) return false;
       if (_storageFilter != '전체' && i['storage']?.toString() != _storageFilter) return false;
+      if (query.isNotEmpty) {
+        final name = (i['name']?.toString() ?? '').toLowerCase();
+        if (!name.contains(query)) return false;
+      }
+      if (_showExpiredOnly) {
+        // D-day < 0 = 이미 만료 (오늘 만료는 포함 안 함 — "만료된 것"의 통상 의미)
+        if (calculateDDay(i['expirationDate']?.toString()) >= 0) return false;
+      }
       return true;
     }).toList();
 
@@ -215,6 +228,35 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           ),
           const SizedBox(height: 16),
 
+          // 이름 검색
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v),
+              decoration: InputDecoration(
+                hintText: '이름으로 검색',
+                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                suffixIcon: _searchQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.close, size: 18, color: Color(0xFF9CA3AF)),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      ),
+                filled: true,
+                fillColor: const Color(0xFFF5F5F5),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+                isDense: true,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
           // 카테고리 필터
           SizedBox(
             height: 40,
@@ -275,6 +317,44 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 만료된 것만 보기 토글
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GestureDetector(
+              onTap: () => setState(() => _showExpiredOnly = !_showExpiredOnly),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _showExpiredOnly ? const Color(0xFFFEE2E2) : const Color(0xFFF5F5F5),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _showExpiredOnly ? const Color(0xFFFCA5A5) : Colors.transparent,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _showExpiredOnly ? Icons.check_box : Icons.check_box_outline_blank,
+                      size: 18,
+                      color: _showExpiredOnly ? const Color(0xFFDC2626) : const Color(0xFF9CA3AF),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '만료된 것만 보기',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: _showExpiredOnly ? const Color(0xFFDC2626) : const Color(0xFF6B7280),
+                        fontWeight: _showExpiredOnly ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 16),
