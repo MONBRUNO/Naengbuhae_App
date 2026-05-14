@@ -7,9 +7,94 @@
 
 ---
 
-## 🆕 이번 작업 정리 (2026-05-13)
+## 🆕 이번 작업 정리 (2026-05-14)
 
-이번 세션의 큰 줄기:
+알림 기능 통째로 추가.
+
+1. **유통기한 임박 알림** — 매일 오전 9시, D-3 ~ D-0 항목을 본문에 묶어서 표시 (로컬 알림, 앱 안 열어도 동작)
+2. **식단 추천 알림** — 사용자가 설정한 아침/점심/저녁 시각의 **10분 전**에 "오늘 점심 식단: ㅇㅇㅇ" 형태 (로컬 알림)
+3. **멤버/초대 푸시** — 누가 내 냉장고에 합류하면 기존 멤버 전원에게, 본인이 제거되면 본인에게 (FCM)
+4. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
+
+---
+
+### 1) 로컬 알림 인프라
+
+`flutter_local_notifications` + `timezone` + `flutter_timezone`.
+
+- Android `POST_NOTIFICATIONS` (13+) / `SCHEDULE_EXACT_ALARM` / `USE_EXACT_ALARM` / `RECEIVE_BOOT_COMPLETED` 권한
+- 재부팅 후 자동 재예약 receiver 등록 (`AndroidManifest.xml`)
+- `coreLibraryDesugaring` 활성 — `java.time` API를 Android 8 미만에서도 사용
+- iOS는 `UIBackgroundModes`에 `remote-notification` + `fetch`
+
+`lib/services/notification_service.dart`가 진입점. 호출 패턴은 "데이터 fetch 후 reschedule":
+
+```dart
+// 식재료 목록 fetch 직후
+await NotificationService.rescheduleExpiryNotifications(items);
+
+// 식단 fetch 직후 (오늘분)
+await NotificationService.rescheduleMealNotifications(
+  breakfast: todays?.breakfast,
+  lunch: todays?.lunch,
+  dinner: todays?.dinner,
+);
+```
+
+내부 동작:
+- 기존 예약 모두 cancel → 다음 7일치 새로 예약 (유통기한)
+- 다음 7일치를 미리 잡아두는 이유: 앱 안 열어도 알림이 와야 하므로
+- 식단은 오늘분만 — 다음 날엔 앱 열 때 갱신
+- 정확 알람 권한 거부 시 `inexactAllowWhileIdle`로 자동 폴백
+
+---
+
+### 2) FCM (멤버/초대 푸시)
+
+`firebase_core` + `firebase_messaging`.
+
+`lib/services/fcm_service.dart`:
+- 로그인 직후 `getToken()` → 서버 `POST /user/fcm-tokens` 등록
+- 로그아웃 직전 `DELETE /user/fcm-tokens/{token}`
+- `onTokenRefresh` 구독 → 갱신 시 자동 재등록
+- 포그라운드 메시지는 로컬 알림으로 띄움 (FCM이 포그라운드에선 자동 표시 안 함)
+- **`google-services.json` 미배치여도 앱은 정상 기동** — `Firebase.initializeApp()` 실패만 로깅하고 로컬 알림만 동작
+
+서버 측은 [백엔드 README](https://github.com/impactice/Naengbuhae_Team_backend) 참고. `FridgeService.joinByCode` / `removeMember`에서 푸시 발송.
+
+---
+
+### 3) 프로필 알림 설정 섹션
+
+`lib/widgets/notification_settings_section.dart` — 프로필 화면 안에 카드로 박혀있는 위젯.
+
+- 전체 알림 마스터 토글 (Off 시 `cancelAll()`)
+- 유통기한 알림 토글 (시간 고정: 매일 9시)
+- 식단 알림 토글 + 아침/점심/저녁 시간 picker
+
+설정 변경 시 `NotificationService.rescheduleFromCache()` 호출 — 마지막으로 fetch한 식재료/식단 데이터를 메모리 캐시에서 꺼내 즉시 재예약. 사용자가 토글하자마자 다음 알림이 새 설정대로 잡힘.
+
+영속화는 `lib/state/notification_settings.dart` (SharedPreferences + ValueNotifier).
+
+---
+
+### 4) 트리거 지점
+
+| 화면 / 시점 | 호출 |
+|---|---|
+| `main.dart` 진입 | `NotificationSettings.load()` + `NotificationService.init()` + `FcmService.init()` |
+| `MainScaffold.initState` | 식재료 한 번 prefetch → expiry 예약 |
+| `LoginScreen` 성공 직후 | 알림 권한 요청 + FCM 토큰 등록 |
+| `IngredientsScreen._fetch` 후 | expiry 재예약 |
+| `MealPlanScreen._fetch` 후 | meal 재예약 |
+| 설정 토글/시간 변경 | `rescheduleFromCache()` |
+| 로그아웃 | FCM 토큰 폐기 |
+
+---
+
+## 이전 작업 정리 (2026-05-13)
+
+이전 세션의 큰 줄기:
 1. **메인 화면 5개 완성** — 홈/식재료/우선순위/장보기/마이페이지 + 하단 네비
 2. **AI 사진 인식** — 식재료 단건 카메라 인식 + 영수증 OCR 화면
 3. **다중 냉장고 + 가족 공유** — 헤더 칩으로 전환, 관리 화면에서 초대/멤버 관리
@@ -167,8 +252,9 @@ class FridgeContext {
 - HTTP: `http` 패키지
 - 토큰 저장: `flutter_secure_storage` (Android Keystore / iOS Keychain)
 - 이미지: `image_picker` (카메라/갤러리)
-- 캐시: `shared_preferences` (선택된 냉장고 등 가벼운 상태)
+- 캐시: `shared_preferences` (선택된 냉장고 / 알림 설정)
 - 아이콘: `lucide_icons_flutter` (웹과 통일된 아이콘셋)
+- 알림: `flutter_local_notifications` + `timezone` (로컬) / `firebase_messaging` (푸시)
 
 ## 시작하기
 
@@ -222,12 +308,16 @@ flutter run --host-vmservice-port=8888 --disable-service-auth-codes
 
 ```
 lib/
-├── main.dart                          # 진입점 + 테마 + AuthGate
+├── main.dart                          # 진입점 + 테마 + AuthGate + 알림 초기화
 ├── api/
 │   ├── api_client.dart                # 401 → refresh → retry, multipart 업로드 포함
 │   └── auth_storage.dart              # OS 보안 저장소 (Keystore/Keychain)
+├── services/
+│   ├── notification_service.dart      # 로컬 알림 스케줄 (유통기한 9시 / 식단 10분 전)
+│   └── fcm_service.dart               # FCM 초기화 + 토큰 서버 등록
 ├── state/
-│   └── fridge_context.dart            # 전역 냉장고 상태 (ValueNotifier)
+│   ├── fridge_context.dart            # 전역 냉장고 상태 (ValueNotifier)
+│   └── notification_settings.dart     # 알림 설정 (SharedPreferences + ValueNotifier)
 ├── screens/
 │   ├── login_screen.dart              # 로그인
 │   ├── signup_screen.dart             # 회원가입
@@ -243,11 +333,12 @@ lib/
 │   ├── recipe_detail_screen.dart      # 레시피 상세
 │   ├── meal_plan_screen.dart          # 식단 추천
 │   ├── nutrition_screen.dart          # 영양 분석
-│   ├── profile_screen.dart            # 마이페이지
+│   ├── profile_screen.dart            # 마이페이지 (+ 알림 설정 섹션)
 │   ├── profile_edit_screen.dart       # 프로필 수정
 │   └── fridge_management_screen.dart  # 냉장고 관리 (초대/멤버)
 ├── widgets/
 │   ├── fridge_selector.dart           # 헤더 냉장고 칩
+│   ├── notification_settings_section.dart # 프로필 안 알림 설정 카드
 │   ├── donut_chart.dart               # 영양 비율 도넛
 │   └── bar_chart.dart                 # 영양 막대
 └── utils/
@@ -265,9 +356,19 @@ lib/
 
 웹의 sessionStorage/localStorage 분기는 모바일에선 불필요 — 앱은 자체 샌드박스라 secure_storage 하나로 통일.
 
+## Firebase 셋업 (FCM 푸시용)
+
+`google-services.json` 없어도 앱 빌드/실행은 가능 — 단 멤버/초대 푸시는 동작 안 함 (로컬 알림은 정상). 활성화하려면:
+
+1. [Firebase Console](https://console.firebase.google.com)에서 프로젝트 생성
+2. **Android 앱 추가** — 패키지명 `com.naengbuhae.naengbuhae_app` → `google-services.json` 다운로드 → `android/app/google-services.json`에 배치
+3. **iOS 앱 추가** (필요 시) — `GoogleService-Info.plist` 다운로드 → Xcode에서 `Runner` 타깃에 추가
+4. 백엔드 측 service account JSON 셋업은 [백엔드 README](https://github.com/impactice/Naengbuhae_Team_backend) 참고
+
 ## 추후 작업
 
 - [ ] OAuth 소셜 로그인 (카카오/구글/네이버 WebView 또는 `flutter_appauth`)
-- [ ] FCM 푸시 알림 (유통기한 임박 — D-1, 당일)
+- [x] FCM 푸시 알림 (~~유통기한 임박 — D-1, 당일~~ → 유통기한은 로컬로 전환, FCM은 멤버/초대 이벤트 전용)
 - [ ] 비밀번호 재설정 메일 링크 → 앱 딥링크 (`uni_links`)
 - [ ] 이메일 인증 안 한 사용자에게 프로필 화면에서 배너 + 재발송 버튼
+- [ ] 알림 탭 시 해당 화면으로 진입 (payload 라우팅 — 현재는 알림 띄우기만)
