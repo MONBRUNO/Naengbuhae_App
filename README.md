@@ -15,6 +15,7 @@
 2. **식단 추천 알림** — 사용자가 설정한 아침/점심/저녁 시각의 **10분 전**에 "오늘 점심 식단: ㅇㅇㅇ" 형태 (로컬 알림)
 3. **멤버/초대 푸시** — 누가 내 냉장고에 합류하면 기존 멤버 전원에게, 본인이 제거되면 본인에게 (FCM)
 4. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
+5. **알림 탭 → 해당 화면 진입** — 유통기한은 식재료 탭, 식단은 식단 화면, 멤버 알림은 냉장고 관리 화면으로
 
 ---
 
@@ -89,6 +90,37 @@ await NotificationService.rescheduleMealNotifications(
 | `MealPlanScreen._fetch` 후 | meal 재예약 |
 | 설정 토글/시간 변경 | `rescheduleFromCache()` |
 | 로그아웃 | FCM 토큰 폐기 |
+
+---
+
+### 5) 알림 탭 라우팅
+
+`lib/services/notification_router.dart`가 payload/route 키를 받아 화면 분기.
+
+| 출처 | 키 | 이동 |
+|---|---|---|
+| 로컬 (유통기한) | payload `expiry` | 식재료 탭 (index 1) |
+| 로컬 (식단) | payload `meal` | `MealPlanScreen` push |
+| FCM (멤버/초대) | `data.route=fridge` | `FridgeManagementScreen` push |
+
+**진입 상태 3가지 모두 커버**:
+- **포그라운드** — 사용자가 이미 앱 보고 있으므로 자동 라우팅 안 함 (알림만 띄움)
+- **백그라운드** — `onDidReceiveNotificationResponse` (로컬) / `onMessageOpenedApp` (FCM)
+- **콜드 스타트** — `getNotificationAppLaunchDetails()` (로컬) / `getInitialMessage()` (FCM). `microtask`로 미뤄서 navigator mount 이후 push
+
+**탭 인덱스 외부 제어**
+
+`lib/state/tab_index.dart`로 `MainScaffold`의 탭 인덱스를 ValueNotifier로 노출 — 알림 핸들러가 위젯 외부에서도 `TabIndex.select(1)`로 식재료 탭 점프 가능.
+
+**서버 측 페이로드 형식**
+
+```java
+// FcmService.sendToUsers(users, title, body, route)
+Message.builder()
+    .setNotification(Notification.builder().setTitle(...).setBody(...).build())
+    .putAllData(Map.of("route", "fridge"))   // 앱이 이 값으로 분기
+    .build();
+```
 
 ---
 
@@ -314,10 +346,12 @@ lib/
 │   └── auth_storage.dart              # OS 보안 저장소 (Keystore/Keychain)
 ├── services/
 │   ├── notification_service.dart      # 로컬 알림 스케줄 (유통기한 9시 / 식단 10분 전)
-│   └── fcm_service.dart               # FCM 초기화 + 토큰 서버 등록
+│   ├── fcm_service.dart               # FCM 초기화 + 토큰 서버 등록
+│   └── notification_router.dart       # 알림 탭 시 화면 분기 (전역 navigatorKey)
 ├── state/
 │   ├── fridge_context.dart            # 전역 냉장고 상태 (ValueNotifier)
-│   └── notification_settings.dart     # 알림 설정 (SharedPreferences + ValueNotifier)
+│   ├── notification_settings.dart     # 알림 설정 (SharedPreferences + ValueNotifier)
+│   └── tab_index.dart                 # MainScaffold 탭 인덱스 외부 제어용
 ├── screens/
 │   ├── login_screen.dart              # 로그인
 │   ├── signup_screen.dart             # 회원가입
@@ -369,6 +403,6 @@ lib/
 
 - [ ] OAuth 소셜 로그인 (카카오/구글/네이버 WebView 또는 `flutter_appauth`)
 - [x] FCM 푸시 알림 (~~유통기한 임박 — D-1, 당일~~ → 유통기한은 로컬로 전환, FCM은 멤버/초대 이벤트 전용)
+- [x] 알림 탭 시 해당 화면으로 진입 (payload + FCM data.route 분기)
 - [ ] 비밀번호 재설정 메일 링크 → 앱 딥링크 (`uni_links`)
 - [ ] 이메일 인증 안 한 사용자에게 프로필 화면에서 배너 + 재발송 버튼
-- [ ] 알림 탭 시 해당 화면으로 진입 (payload 라우팅 — 현재는 알림 띄우기만)
