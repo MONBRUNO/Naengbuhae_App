@@ -9,7 +9,7 @@
 
 ## 🆕 이번 작업 정리 (2026-05-14)
 
-**알림 기능 + OAuth 소셜 로그인 + 식재료 검색.**
+**알림 기능 + OAuth 소셜 로그인 + 식재료 검색 + 가족 활동 통계.**
 
 알림:
 1. **유통기한 임박 알림** — 매일 오전 9시, D-3 ~ D-0 항목을 본문에 묶어서 표시 (로컬 알림, 앱 안 열어도 동작)
@@ -27,6 +27,10 @@
 식재료 화면:
 
 9. **이름 검색 + 만료된 것만 보기 토글** — 카테고리·보관·정렬 위에 검색창, 아래에 만료 토글 chip (D-day < 0)
+
+가족 공유:
+
+10. **가족 활동 통계** — 멤버별 추가/소비 카운트 + 자주 추가/비우는 식재료 TOP 5. 7/30/90일 기간 토글
 
 ---
 
@@ -215,6 +219,38 @@ Navigator.pushReplacement(MaterialScaffold(...));
 - `_filtered` getter에 두 조건 합산 (카테고리 → 보관 → 검색 → 만료 → 정렬)
 
 웹 프론트(`Naengbuhae_Team/Smart Ingredient Management App/src/app/pages/Ingredients.tsx`)도 동일 UX로 동시에 추가.
+
+---
+
+### 9) 가족 활동 통계
+
+`lib/screens/family_activity_screen.dart`. 현재 선택된 냉장고 기준으로 백엔드에서 집계 가져옴.
+
+**`GET /api/fridges/{id}/activity-stats?days=N`** 응답:
+
+```json
+{
+  "fridgeId": 1,
+  "fridgeName": "우리집 냉장고",
+  "periodDays": 30,
+  "members": [
+    {"username": "alice", "name": "앨리스", "added": 12, "removed": 8},
+    {"username": "bob", "name": "밥", "added": 5, "removed": 7}
+  ],
+  "topAdded": [{"name": "사과", "count": 5}],
+  "topRemoved": [{"name": "우유", "count": 3}]
+}
+```
+
+화면 구성:
+- 헤더 카드 — 냉장고 이름 + 전체 추가/비움 카운트
+- 기간 chips (7/30/90일) — 변경 시 즉시 refetch
+- 멤버별 활동 row — `+N -N` 뱃지로 추가/소비 표시
+- 자주 추가/비운 식재료 TOP 5 — 1~5 순위 + 막대 바 (`maxCount` 기준 비율)
+
+**진입점**: 마이페이지 "가족 활동" 카드.
+
+**데이터 소스**: 백엔드 `ActivityLog` 엔티티 (행위자/액션/식재료명/생성시각). `Notification`은 수신자 관점이라 통계에 부적합해서 별도 테이블로 분리.
 
 ---
 
@@ -466,6 +502,7 @@ lib/
 │   ├── profile_screen.dart            # 마이페이지 (+ 알림 진입점 + 알림 설정 섹션)
 │   ├── profile_edit_screen.dart       # 프로필 수정
 │   ├── notification_center_screen.dart # 인앱 알림 센터 (히스토리)
+│   ├── family_activity_screen.dart    # 가족 활동 통계 (멤버 카운트 + TOP)
 │   └── fridge_management_screen.dart  # 냉장고 관리 (초대/멤버)
 ├── widgets/
 │   ├── fridge_selector.dart           # 헤더 냉장고 칩

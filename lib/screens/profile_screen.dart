@@ -8,6 +8,7 @@ import '../services/fcm_service.dart';
 import '../state/fridge_context.dart';
 import '../utils/format.dart';
 import '../widgets/notification_settings_section.dart';
+import 'family_activity_screen.dart';
 import 'fridge_management_screen.dart';
 import 'login_screen.dart';
 import 'meal_plan_screen.dart';
@@ -526,6 +527,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
                           SizedBox(height: 2),
                           Text('가족 공유, 초대 코드, 김치냉장고 추가 등',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 가족 활동 통계 진입
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: InkWell(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const FamilyActivityScreen()),
+              ),
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.insights, color: Colors.black, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text('가족 활동',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          SizedBox(height: 2),
+                          Text('멤버별 추가/소비 + 자주 사는 식재료 TOP',
                               style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
                         ],
                       ),
