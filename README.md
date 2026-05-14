@@ -18,10 +18,11 @@
 4. **식재료 추가/삭제 푸시** — 가족 멤버 누가 사과 5개를 넣으면 나머지 전원에게, 다 떨어졌다고 지우면 나머지 전원에게 (FCM)
 5. **프로필 화면 알림 설정** — 마스터/유통기한/식단 토글 + 식사 시간 3개 picker, 변경 즉시 재예약
 6. **알림 탭 → 해당 화면 진입** — 유통기한·식재료 알림은 식재료 탭, 식단은 식단 화면, 멤버 알림은 냉장고 관리 화면으로
+7. **인앱 알림 센터** — 받은 알림(FCM)을 DB에 영속화해서 마이페이지에서 히스토리 + 안읽은 수 뱃지
 
 로그인:
 
-7. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
+8. **OAuth 소셜 로그인 (카카오/네이버/구글)** — placeholder 버튼을 실제 WebView 흐름으로 연결
 
 ---
 
@@ -140,7 +141,32 @@ Message.builder()
 
 ---
 
-### 6) OAuth 소셜 로그인
+### 6) 인앱 알림 센터
+
+FCM 푸시는 휘발성이라 놓치면 끝 — DB에 영속화해서 마이페이지에서 다시 볼 수 있게.
+
+**`lib/screens/notification_center_screen.dart`**
+
+- 진입 시 `GET /api/notifications` (최신 50개) + `POST /api/notifications/read-all` 자동 호출 (본 시점에 읽음 처리)
+- 항목 탭 시 `route` 키로 `NotificationRouter.route()` 호출 → 해당 화면으로 점프
+- 안읽은 항목은 lime-yellow 배경 + 좌측 dot로 구분
+
+**진입점**
+
+마이페이지 상단의 **"알림"** 카드. 안읽은 수 > 0일 때 우측에 빨간 뱃지 표시.
+
+- 마이 탭 진입 시 `GET /api/notifications/unread-count` 호출
+- 센터에서 돌아오면 자동으로 0 처리 (서버에서 이미 read-all 됨)
+
+**서버 측 동작**
+
+- `AppNotificationService`가 모든 FCM 발송의 단일 진입점 — DB row 영속화 + `FcmService.send*` 호출을 함께 수행
+- `FridgeService` / `IngredientService`가 `fcmService`를 직접 부르지 않고 `appNotificationService`만 사용 → 푸시 누락 없이 히스토리에 남음
+- 회원 탈퇴 시 `notificationRepository.deleteByUser`로 정리
+
+---
+
+### 7) OAuth 소셜 로그인
 
 `webview_flutter`로 백엔드의 OAuth 흐름을 인앱 WebView에서 진행 — 토큰을 콜백 URL에서 가로채는 방식.
 
@@ -421,8 +447,9 @@ lib/
 │   ├── recipe_detail_screen.dart      # 레시피 상세
 │   ├── meal_plan_screen.dart          # 식단 추천
 │   ├── nutrition_screen.dart          # 영양 분석
-│   ├── profile_screen.dart            # 마이페이지 (+ 알림 설정 섹션)
+│   ├── profile_screen.dart            # 마이페이지 (+ 알림 진입점 + 알림 설정 섹션)
 │   ├── profile_edit_screen.dart       # 프로필 수정
+│   ├── notification_center_screen.dart # 인앱 알림 센터 (히스토리)
 │   └── fridge_management_screen.dart  # 냉장고 관리 (초대/멤버)
 ├── widgets/
 │   ├── fridge_selector.dart           # 헤더 냉장고 칩

@@ -11,6 +11,7 @@ import '../widgets/notification_settings_section.dart';
 import 'fridge_management_screen.dart';
 import 'login_screen.dart';
 import 'meal_plan_screen.dart';
+import 'notification_center_screen.dart';
 import 'nutrition_screen.dart';
 import 'priority_screen.dart';
 import 'profile_edit_screen.dart';
@@ -31,11 +32,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _profile;
+  int _unreadCount = 0;
 
   @override
   void initState() {
     super.initState();
     _fetch();
+    _fetchUnreadCount();
+  }
+
+  Future<void> _fetchUnreadCount() async {
+    try {
+      final res = await ApiClient.get('/api/notifications/unread-count');
+      if (res.statusCode != 200) return;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final count = data['count'];
+      if (mounted) setState(() => _unreadCount = count is num ? count.toInt() : 0);
+    } catch (_) {
+      // 무시 — 다음 진입 시 다시 시도
+    }
   }
 
   Future<void> _fetch() async {
@@ -421,9 +436,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
           ],
 
-          // 냉장고 관리 진입
+          // 알림 센터 진입
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: InkWell(
+              onTap: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const NotificationCenterScreen()),
+                );
+                // 알림 센터에서 read-all 호출하므로 돌아오면 unread는 0
+                if (mounted) setState(() => _unreadCount = 0);
+              },
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.notifications_none, color: Colors.black, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('알림',
+                              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                          SizedBox(height: 2),
+                          Text('받은 알림 내역 (가족 활동 / 멤버 변경)',
+                              style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                        ],
+                      ),
+                    ),
+                    if (_unreadCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFDC2626),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          _unreadCount > 99 ? '99+' : '$_unreadCount',
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // 냉장고 관리 진입
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
             child: InkWell(
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const FridgeManagementScreen()),
