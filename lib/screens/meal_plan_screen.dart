@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../services/notification_service.dart';
 import '../utils/format.dart';
 import '../widgets/bar_chart.dart';
 import 'recipes_screen.dart';
@@ -78,6 +79,15 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         _matches = matches;
         _hasIngredients = ingredients.isNotEmpty;
       });
+      // 오늘의 식단을 알림에 반영
+      final plan = _generateMealPlan();
+      final todays = plan.isNotEmpty ? plan.first : null;
+      // ignore: unawaited_futures
+      NotificationService.rescheduleMealNotifications(
+        breakfast: todays?.breakfast,
+        lunch: todays?.lunch,
+        dinner: todays?.dinner,
+      );
     } catch (e) {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {

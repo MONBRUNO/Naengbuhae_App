@@ -3,9 +3,18 @@ import 'package:flutter/material.dart';
 import 'api/auth_storage.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_scaffold.dart';
+import 'services/fcm_service.dart';
+import 'services/notification_service.dart';
+import 'state/notification_settings.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // 알림 인프라 초기화 — 로컬은 무조건, FCM은 google-services.json이 있어야 동작
+  await NotificationSettings.load();
+  await NotificationService.init();
+  // FCM은 비차단으로 — 초기화 실패해도 로컬 알림은 계속 동작해야 함
+  // ignore: unawaited_futures
+  FcmService.init();
   runApp(const NaengbuhaeApp());
 }
 

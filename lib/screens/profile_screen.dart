@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../api/auth_storage.dart';
+import '../services/fcm_service.dart';
 import '../state/fridge_context.dart';
 import '../utils/format.dart';
+import '../widgets/notification_settings_section.dart';
 import 'fridge_management_screen.dart';
 import 'login_screen.dart';
 import 'meal_plan_screen.dart';
@@ -68,6 +70,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (ok != true) return;
+    // FCM 토큰 폐기는 access 토큰이 살아있을 때 먼저 — clear() 뒤엔 인증 실패함
+    await FcmService.unregisterCurrentToken();
     await ApiClient.logoutOnServer();
     await AuthStorage.clear();
     await FridgeContext.clear();
@@ -458,6 +462,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ),
+
+          // 알림 설정
+          const NotificationSettingsSection(),
 
           // 알레르기 정보
           if (allergies != null && allergies.isNotEmpty)

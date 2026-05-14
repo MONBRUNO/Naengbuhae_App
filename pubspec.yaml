@@ -40,6 +40,13 @@ dependencies:
   lucide_icons_flutter: ^3.0.0
   image_picker: ^1.1.2
 
+  # 알림 — 로컬 스케줄(유통기한 9시 / 식단 10분 전) + FCM(멤버/초대)
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.0
+  flutter_timezone: ^4.0.0
+  firebase_core: ^3.8.0
+  firebase_messaging: ^15.1.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

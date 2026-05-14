@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../api/auth_storage.dart';
+import '../services/fcm_service.dart';
+import '../services/notification_service.dart';
 import 'forgot_password_screen.dart';
 import 'main_scaffold.dart';
 import 'signup_screen.dart';
@@ -59,6 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken: data['token'] as String,
         refreshToken: data['refreshToken'] as String,
       );
+      // 로그인 직후 알림 권한 요청 + FCM 토큰 등록. 실패해도 로그인 흐름은 진행.
+      // ignore: unawaited_futures
+      NotificationService.requestPermission();
+      // ignore: unawaited_futures
+      FcmService.registerCurrentToken();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const MainScaffold()),

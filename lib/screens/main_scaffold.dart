@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../api/api_client.dart';
+import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
 import 'dashboard_screen.dart';
 import 'ingredients_screen.dart';
@@ -37,6 +39,19 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
     // 냉장고 목록 + 현재 선택된 냉장고 로드 (전역 상태)
     FridgeContext.load();
+    // 앱 시작 시 식재료 한 번 fetch해서 유통기한 알림 예약 (사용자가 식재료 탭을 안 열어도 동작하도록)
+    _prefetchForNotifications();
+  }
+
+  Future<void> _prefetchForNotifications() async {
+    try {
+      final res = await ApiClient.get('/api/ingredients');
+      if (res.statusCode != 200) return;
+      final items = (jsonDecode(utf8.decode(res.bodyBytes)) as List).cast<Map<String, dynamic>>();
+      await NotificationService.rescheduleExpiryNotifications(items);
+    } catch (_) {
+      // 네트워크 실패해도 무시 — 다음 fetch에서 갱신됨
+    }
   }
 
   @override

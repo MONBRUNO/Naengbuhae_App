@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
 import '../utils/expiry.dart';
 import '../widgets/fridge_selector.dart';
@@ -63,7 +64,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         return;
       }
       final data = jsonDecode(utf8.decode(res.bodyBytes)) as List;
-      setState(() => _items = data.cast<Map<String, dynamic>>());
+      final items = data.cast<Map<String, dynamic>>();
+      setState(() => _items = items);
+      // 식재료 갱신 후 유통기한 알림 재스케줄
+      // ignore: unawaited_futures
+      NotificationService.rescheduleExpiryNotifications(items);
     } catch (e) {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {
