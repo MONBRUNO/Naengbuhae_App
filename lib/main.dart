@@ -4,6 +4,7 @@ import 'api/auth_storage.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_scaffold.dart';
 import 'services/fcm_service.dart';
+import 'services/notification_router.dart';
 import 'services/notification_service.dart';
 import 'state/notification_settings.dart';
 
@@ -29,6 +30,8 @@ class NaengbuhaeApp extends StatelessWidget {
     return MaterialApp(
       title: '냉부해',
       debugShowCheckedModeBanner: false,
+      // 알림 탭 핸들러에서 화면 전환할 때 사용
+      navigatorKey: NotificationRouter.navigatorKey,
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(

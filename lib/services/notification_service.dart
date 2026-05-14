@@ -7,6 +7,7 @@ import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../state/notification_settings.dart';
+import 'notification_router.dart';
 
 // 로컬 알림 스케줄링.
 // - 유통기한: 매일 오전 9시. 현재 식재료 기준으로 다음 7일치 알림을 미리 예약 (앱 안 켜도 동작).
@@ -51,9 +52,21 @@ class NotificationService {
     );
     await _plugin.initialize(
       const InitializationSettings(android: androidInit, iOS: iosInit),
+      onDidReceiveNotificationResponse: _onTapped,
     );
 
     _inited = true;
+
+    // 콜드 스타트(앱이 완전히 꺼져있다가 알림 탭으로 실행된 경우) 처리
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp == true) {
+      // navigatorKey가 아직 mount 되기 전이라 microtask로 미루기
+      Future.microtask(() => NotificationRouter.route(launch?.notificationResponse?.payload));
+    }
+  }
+
+  static void _onTapped(NotificationResponse response) {
+    NotificationRouter.route(response.payload);
   }
 
   // 시스템 권한 요청 (Android 13+ POST_NOTIFICATIONS, iOS 알림 권한).

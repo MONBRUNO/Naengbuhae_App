@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
+import 'notification_router.dart';
 import 'notification_service.dart';
 
 // FCM 푸시 알림 (멤버/초대 등 서버 트리거 이벤트).
@@ -47,8 +48,20 @@ class FcmService {
       final title = notif?.title ?? data['title']?.toString() ?? '냉부해';
       final body = notif?.body ?? data['body']?.toString() ?? '';
       if (body.isEmpty) return;
+      // 포그라운드는 사용자가 이미 앱 보고 있는 상태 → 알림만 띄우고 자동 라우팅은 안 함
       NotificationService.showLocal(title: title, body: body);
     });
+
+    // 백그라운드/종료 상태에서 알림 탭으로 앱이 다시 열린 경우
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _handleTap(message);
+    });
+
+    // 콜드 스타트 (앱이 완전히 꺼져있다가 FCM 탭으로 실행된 경우)
+    final initial = await messaging.getInitialMessage();
+    if (initial != null) {
+      Future.microtask(() => _handleTap(initial));
+    }
 
     // 토큰 갱신 시 서버에 재등록
     FirebaseMessaging.instance.onTokenRefresh.listen((token) {
@@ -56,6 +69,13 @@ class FcmService {
     });
 
     _inited = true;
+  }
+
+  // RemoteMessage.data에 route 값이 있으면 그 화면으로 이동.
+  // 서버에서 fridge/expiry/meal 등 명시.
+  static void _handleTap(RemoteMessage message) {
+    final route = message.data['route']?.toString();
+    NotificationRouter.route(route);
   }
 
   // 로그인 직후 호출 — 현재 토큰을 서버에 등록.

@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../api/api_client.dart';
 import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
+import '../state/tab_index.dart';
 import 'dashboard_screen.dart';
 import 'ingredients_screen.dart';
 import 'login_screen.dart';
@@ -23,7 +24,6 @@ class MainScaffold extends StatefulWidget {
 }
 
 class _MainScaffoldState extends State<MainScaffold> {
-  int _index = 0;
   StreamSubscription<void>? _loggedOutSub;
 
   @override
@@ -62,20 +62,24 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _index,
-        children: [
-          DashboardScreen(onSeeAllIngredients: () => setState(() => _index = 1)),
-          const IngredientsScreen(),
-          const PriorityScreen(),
-          const ShoppingScreen(),
-          const ProfileScreen(),
-        ],
-      ),
-      bottomNavigationBar: _BottomNav(
-        index: _index,
-        onChanged: (i) => setState(() => _index = i),
+    // 탭 인덱스를 전역 ValueNotifier로 관리 — 알림 탭 핸들러가 외부에서 변경 가능
+    return ValueListenableBuilder<int>(
+      valueListenable: TabIndex.current,
+      builder: (_, index, __) => Scaffold(
+        body: IndexedStack(
+          index: index,
+          children: [
+            DashboardScreen(onSeeAllIngredients: () => TabIndex.select(1)),
+            const IngredientsScreen(),
+            const PriorityScreen(),
+            const ShoppingScreen(),
+            const ProfileScreen(),
+          ],
+        ),
+        bottomNavigationBar: _BottomNav(
+          index: index,
+          onChanged: TabIndex.select,
+        ),
       ),
     );
   }
