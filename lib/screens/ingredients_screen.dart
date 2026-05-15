@@ -569,7 +569,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 if (_selectionMode) ...[
                   Icon(
                     isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                    color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
                     size: 22,
                   ),
                   const SizedBox(width: 10),
