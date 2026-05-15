@@ -9,27 +9,63 @@
 
 ## 🆕 이번 작업 정리 (2026-05-15)
 
-**비로그인 게스트 모드 + 회원가입 인라인 이메일 인증.**
+### 1) 비로그인 게스트 모드
 
-게스트 모드:
-1. **"로그인 없이 둘러보기"** — 로그인 화면 하단에 진입점. 토큰 없이 메인 진입 가능
-2. **로컬 식재료 저장** — `LocalIngredientStore`가 SharedPreferences에 JSON으로 저장, id는 `-1, -2, ...` 음수로 발급해 서버 id와 충돌 회피
-3. **`IngredientRepo` 분기** — 모든 `/api/ingredients` 호출을 한 곳으로 모아 `GuestMode.isGuest()` 검사 후 로컬 또는 API
-4. **가상 단일 냉장고** — `FridgeContext.load()`가 게스트면 서버 호출 없이 가상 냉장고(id=-1) 세팅
-5. **잠금 기능** — `LoginRequired` 다이얼로그로 영양 분석 / 레시피 / 식단 추천 / 영수증 인식 / 장보기 진입 차단
-6. **ProfileScreen 게스트 변형** — `/user/me` 호출 없이 가입/로그인 CTA + 잠금 기능 미리보기 표시
-7. **로그인 시 마이그레이션** — `IngredientMigration.promptAndMigrate`가 `/api/ingredients/import` 호출, 사용자가 "옮기기" 누르면 일괄 이전
+토큰 없이도 식재료 관리만 쓸 수 있게, 가입은 의향 있는 사람만.
 
-회원가입 인라인 이메일 인증:
-1. 이메일 옆 "**인증번호 받기**" 버튼 → 6자리 코드 메일 발송
-2. 코드 입력 + "**확인**" → 검증 통과 시 "인증완료" 뱃지 표시
-3. 이메일 변경 시 인증 상태 자동 무효화 (재발송 필요)
-4. 가입 폼 제출 시 검증된 이메일과 현재 입력값 일치 확인
-5. 백엔드는 `POST /user/email/send-code` + `/user/email/verify-code`로 처리
+- **진입**: 로그인 화면 **로그인 버튼 바로 아래** 작은 텍스트 버튼 "로그인 없이 둘러보기" (회원가입만 있는 줄 알고 이탈하지 않도록 노출 위치 조정)
+- **로컬 식재료**: `LocalIngredientStore`가 SharedPreferences에 JSON으로 저장. id는 `-1, -2, ...` 음수로 발급해 서버 id와 충돌 회피
+- **분기 레이어**: `IngredientRepo`가 모든 `/api/ingredients` 호출을 한 곳으로 모음 → `GuestMode.isGuest()` 검사 후 로컬 또는 API
+- **가상 단일 냉장고**: `FridgeContext.load()`가 게스트면 서버 호출 없이 가상 냉장고(id=-1, "내 냉장고") 세팅
+- **잠금 기능**: `LoginRequired` 다이얼로그로 영양 분석 / 레시피 / 식단 추천 / 영수증 인식 / 장보기 진입 차단
+- **ProfileScreen 게스트 변형**: `/user/me` 호출 없이 가입/로그인 CTA + 잠금 기능 미리보기
+- **로그인 시 마이그레이션**: `IngredientMigration.promptAndMigrate`가 `/api/ingredients/import` 호출 → 로컬 데이터 일괄 이전 후 로컬 정리
 
-로그인 화면 UX 개선:
-1. "로그인 없이 둘러보기"를 **로그인 버튼 바로 아래**로 이동 (회원가입만 있는 줄 알고 이탈 방지)
-2. 미인증 사용자 응답 시 **노란 배너 + "메일 다시 받기"** 노출 — `_verificationBanner()`
+### 2) 회원가입 인라인 이메일 인증 (코드 방식)
+
+매직 링크 → 6자리 코드 인라인 입력 방식으로 전환.
+
+- 이메일 옆 "**인증번호 받기**" 버튼 → 6자리 코드 메일 발송
+- 코드 입력 + "**확인**" → 검증 통과 시 "인증완료" 뱃지 표시 + 이메일 입력 칸 잠금
+- 이메일을 바꾸면 `onChanged`에서 인증 상태 자동 무효화 (재발송 필요)
+- 가입 폼 제출 시 `_verifiedEmail == _email.text.trim()` 재확인 가드
+- 엔드포인트: `POST /user/email/send-code`, `POST /user/email/verify-code`
+
+### 3) 회원가입 후 username 자동 채우기
+
+가입 성공 → `Navigator.pop<String>(_username.text.trim())`로 username을 LoginScreen에 전달 → controller에 채워줌. 사용자는 비번만 치면 됨.
+
+### 4) 비밀번호 변경 화면
+
+- `screens/change_password_screen.dart`: 현재 비번 + 새 비번(확인) → `POST /user/me/password`
+- ProfileScreen 회원 탈퇴 위에 진입 버튼 추가, `provider == 'LOCAL'`일 때만 노출 (소셜 가입자는 비번 변경 불가)
+
+### 5) 식재료 / 장보기 다중 선택 일괄 삭제
+
+- 두 화면 모두 같은 패턴: 헤더 우측 "선택" 버튼 → 진입 시 우측 "취소" / 카드 탭으로 토글 / 상단 액션 바 "전체 선택 + N개 삭제"
+- `IngredientRepo.bulkDelete(List<int>)` — 게스트면 로컬 순차 삭제, 로그인이면 `/api/ingredients/bulk-delete` 단일 요청
+- 장보기는 `/api/shopping-list/bulk-delete`. 미완료/완료 섹션 모두 선택 가능. 선택 모드에선 토글/이관/삭제 개별 버튼 숨김
+
+### 6) 알림 탭 → 정확한 식재료로 이동
+
+`NotificationRouter`가 `"ingredient:{id}"` 패턴 인식:
+
+- `IngredientRepo.list`로 목록 fetch → 해당 id 찾기 → `IngredientEditScreen(existing: item)` push
+- 이미 삭제된 식재료(가족이 비움)면 식재료 탭으로 폴백
+- 기존 `expiry` / `ingredients` / `meal` / `fridge` 분기는 그대로
+
+### 7) 가족 활동 통계 차트 시각화
+
+- **멤버별 활동**: 한 멤버당 추가(녹색) / 비움(주황) **그룹형 막대 차트** (인라인 구현 — `SimpleBarChart`로는 단일 막대만 가능해서 별도)
+- **자주 추가/비운 식재료 TOP5**: `DonutChart` 위젯 + 색깔 범례 5단계 (`_pieGreens` / `_pieOranges`)
+- 차트 위, 기존 멤버 행/랭크 리스트는 그대로 유지 → 한눈에 + 상세 모두
+
+### 8) 죽은 매직 링크 흔적 정리
+
+코드 기반 가입 인증으로 전환되며 안 쓰이는 코드 제거:
+
+- `ProfileScreen`의 `_EmailVerificationBanner` 위젯 + 분기 제거
+- `LoginScreen`의 `_pendingEmail` / `_verificationSent` / `_resending` 상태 + 배너 위젯 + `_resendVerification` 메서드 제거
 
 ---
 
