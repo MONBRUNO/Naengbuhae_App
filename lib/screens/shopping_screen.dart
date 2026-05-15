@@ -384,8 +384,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 OutlinedButton(
                   onPressed: _items.isEmpty ? null : _enterSelectionMode,
                   style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0xFFF3F4F6),
-                    foregroundColor: const Color(0xFF374151),
+                    backgroundColor: context.cardBg,
+                    foregroundColor: context.isDark ? const Color(0xFFE5E7EB) : const Color(0xFF374151),
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     side: BorderSide.none,
@@ -522,16 +522,19 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   }
 
   Widget _suggestionsCard() {
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFF7FEE7), Colors.white],
+          colors: isDark
+              ? const [Color(0xFF365314), Color(0xFF1F2937)]
+              : const [Color(0xFFF7FEE7), Colors.white],
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFD9F99D)),
+        border: Border.all(color: isDark ? const Color(0xFF4D7C0F) : const Color(0xFFD9F99D)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -564,9 +567,9 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: context.surfaceBg,
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFD9F99D)),
+                      border: Border.all(color: isDark ? const Color(0xFF4D7C0F) : const Color(0xFFD9F99D)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -594,11 +597,11 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   InputDecoration _inputDecoration(String? hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: context.surfaceBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         isDense: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0xFFE5E7EB))),
-        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Colors.black)),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: context.borderColor)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: context.textColor)),
       );
 
   Widget _uncheckedTile(Map<String, dynamic> item) {

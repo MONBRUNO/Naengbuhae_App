@@ -299,7 +299,9 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
             ],
             if (missing.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Wrap(spacing: 4, runSpacing: 4, children: missing.map((s) => _chip('-$s', const Color(0xFFFEE2E2), const Color(0xFFB91C1C))).toList()),
+              Wrap(spacing: 4, runSpacing: 4, children: missing.map((s) => _chip('-$s',
+                  context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2),
+                  context.isDark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C))).toList()),
             ],
           ],
         ),
