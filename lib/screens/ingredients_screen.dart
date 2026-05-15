@@ -533,9 +533,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final id = item['id'] as int;
     final isSelected = _selectedIds.contains(id);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
+    final innerCard = InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () async {
         if (_selectionMode) {
@@ -628,6 +626,94 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           ],
         ),
       ),
+    );
+
+    // 선택 모드에선 스와이프 비활성화 — 카드 탭으로 토글하는 흐름과 충돌 방지.
+    if (_selectionMode) {
+      return Container(margin: const EdgeInsets.only(bottom: 8), child: innerCard);
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Dismissible(
+        key: ValueKey('ing-$id'),
+        background: _swipeRightBg(),     // 오른쪽으로 스와이프 → 좌측에 보이는 배경 = 수정
+        secondaryBackground: _swipeLeftBg(), // 왼쪽으로 스와이프 → 우측에 보이는 배경 = 소비(삭제)
+        confirmDismiss: (direction) async {
+          if (direction == DismissDirection.endToStart) {
+            // 왼쪽 스와이프 = 소비/삭제. 확인 후 API 호출. 성공 시 true 반환해 카드 제거.
+            final ok = await showDialog<bool>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('소비했나요?'),
+                content: Text('${item['name']}을(를) 냉장고에서 비울게요.'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+                  TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('소비')),
+                ],
+              ),
+            );
+            if (ok != true) return false;
+            final res = await IngredientRepo.delete(id);
+            if (res.statusCode == 200) {
+              _fetch();
+              return true;
+            }
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('삭제 실패 (${res.statusCode})')));
+            }
+            return false;
+          } else {
+            // 오른쪽 스와이프 = 수정 화면으로 이동. 카드는 유지.
+            final updated = await Navigator.of(context).push<bool>(
+              MaterialPageRoute(builder: (_) => IngredientEditScreen(existing: item)),
+            );
+            if (updated == true) _fetch();
+            return false;
+          }
+        },
+        child: innerCard,
+      ),
+    );
+  }
+
+  // 좌측 배경 (오른쪽으로 스와이프 시 노출) — 수정 의미
+  Widget _swipeRightBg() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3B82F6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.centerLeft,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Icon(Icons.edit, color: Colors.white, size: 22),
+          SizedBox(width: 8),
+          Text('수정', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        ],
+      ),
+    );
+  }
+
+  // 우측 배경 (왼쪽으로 스와이프 시 노출) — 소비/삭제 의미
+  Widget _swipeLeftBg() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFDC2626),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      alignment: Alignment.centerRight,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: const [
+          Text('소비', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          SizedBox(width: 8),
+          Icon(Icons.check, color: Colors.white, size: 22),
+        ],
       ),
     );
   }
