@@ -16,30 +16,125 @@ class RecipeDetailScreen extends StatefulWidget {
 
 class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
   bool _adding = false;
+  // 같은 레시피를 다시 봐도 안 묻도록 메모리에 기록 (앱 종료 시 초기화 — 그 정도면 충분)
+  static final Set<String> _dismissedAskIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // 빌드 직후 부족 재료 안내 다이얼로그 자동 노출
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAsk());
+  }
+
+  void _maybeAsk() {
+    final id = widget.recipe['id']?.toString();
+    if (id == null) return;
+    if (_dismissedAskIds.contains(id)) return;
+    final missing = _missingItems();
+    if (missing.isEmpty) return;
+    _showAskDialog(missing);
+  }
+
+  // 부족 재료 이름 + 레시피 측 quantity/unit 같이 묶어서 반환.
+  List<Map<String, dynamic>> _missingItems() {
+    final missing = (widget.match?['missingIngredients'] as List?)?.cast<String>() ?? const [];
+    if (missing.isEmpty) return const [];
+    final ingredients = (widget.recipe['ingredients'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+    return missing.map((name) {
+      final m = ingredients.firstWhere(
+        (e) => e['name']?.toString() == name,
+        orElse: () => {'name': name, 'quantity': 1.0, 'unit': '개'},
+      );
+      return {
+        'name': m['name'],
+        'quantity': (m['quantity'] as num?)?.toDouble() ?? 1.0,
+        'unit': (m['unit']?.toString().isNotEmpty ?? false) ? m['unit'] : '개',
+      };
+    }).toList();
+  }
+
+  Future<void> _showAskDialog(List<Map<String, dynamic>> missing) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('부족한 재료 ${missing.length}개가 있어요'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('장보기 리스트에 한 번에 추가할까요?',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF9FAFB),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: missing.map((m) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Row(
+                      children: [
+                        Expanded(child: Text(m['name']?.toString() ?? '',
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+                        Text('${m['quantity']}${m['unit']}',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  )).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('괜찮아요')),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accentGreen,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('장보기에 추가'),
+          ),
+        ],
+      ),
+    );
+    final id = widget.recipe['id']?.toString();
+    if (id != null) _dismissedAskIds.add(id); // 닫든 추가든 다시 안 묻기
+    if (result == true) await _bulkAdd(missing);
+  }
 
   Future<void> _addMissingToShopping() async {
-    final missing = (widget.match?['missingIngredients'] as List?)?.cast<String>() ?? const [];
+    final missing = _missingItems();
     if (missing.isEmpty) {
-      _snack('부족한 재료가 없습니다');
+      _snack('부족한 재료가 없어요');
       return;
     }
+    await _bulkAdd(missing);
+  }
+
+  Future<void> _bulkAdd(List<Map<String, dynamic>> missing) async {
+    if (_adding) return;
     setState(() => _adding = true);
-    int ok = 0;
-    int fail = 0;
-    for (final name in missing) {
-      final res = await ApiClient.post('/api/shopping-list', body: {
-        'name': name,
-        'quantity': 1.0,
-        'unit': '개',
+    try {
+      final res = await ApiClient.post('/api/shopping-list/bulk-add', body: {
+        'items': missing,
       });
       if (res.statusCode == 200) {
-        ok++;
+        _snack('장보기에 ${missing.length}개 추가했어요');
       } else {
-        fail++;
+        _snack('추가 실패 (${res.statusCode})');
       }
+    } catch (_) {
+      _snack('서버 연결 실패');
+    } finally {
+      if (mounted) setState(() => _adding = false);
     }
-    if (mounted) setState(() => _adding = false);
-    _snack('장보기에 추가: 성공 $ok / 실패 $fail');
   }
 
   void _snack(String s) {
