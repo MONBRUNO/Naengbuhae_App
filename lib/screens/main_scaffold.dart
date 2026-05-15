@@ -118,8 +118,9 @@ class _BottomNav extends StatelessWidget {
             children: List.generate(_items.length, (i) {
               final (icon, label) = _items[i];
               final active = i == index;
+              // 선택 탭은 sky 액센트 (웹과 통일)
               final color = active
-                  ? (isDark ? Colors.white : Colors.black)
+                  ? (isDark ? const Color(0xFF8BCEEA) : const Color(0xFF2563EB))
                   : const Color(0xFF9CA3AF);
               return Expanded(
                 child: InkWell(

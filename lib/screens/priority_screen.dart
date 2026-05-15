@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
+import '../state/tab_index.dart';
 import '../utils/expiry.dart';
 import '../utils/theme_colors.dart';
 import '../widgets/donut_chart.dart';
@@ -148,9 +149,20 @@ class _PriorityScreenState extends State<PriorityScreen> {
           if (safe.length > 5)
             Padding(
               padding: const EdgeInsets.only(top: 12),
-              child: Text('외 ${safe.length - 5}개 더 있음',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+              child: GestureDetector(
+                onTap: () => TabIndex.select(1), // 식재료 탭으로 이동
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('외 ${safe.length - 5}개 더 보기',
+                        style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: context.skyAccent)),
+                    Icon(Icons.chevron_right, size: 16, color: context.skyAccent),
+                  ],
+                ),
+              ),
             ),
         ],
       ],
