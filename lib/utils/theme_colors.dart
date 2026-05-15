@@ -29,4 +29,11 @@ extension ThemeColorsContext on BuildContext {
 
   // 더 옅은 텍스트 (Color(0xFF9CA3AF) 대체)
   Color get hintTextColor => isDark ? const Color(0xFF9CA3AF) : const Color(0xFF9CA3AF);
+
+  // 브랜드 액센트 (식재료 추가하기 같은 primary 버튼 배경)
+  // 라이트: #CDFF00 형광 라임 (브랜드), 다크: 채도/명도 낮춘 라임 — 눈피로 감소
+  Color get accentColor => isDark ? const Color(0xFFA3CC0E) : const Color(0xFFCDFF00);
+
+  // 액센트 위 글자 (둘 다 검정 — 라임 배경에서 검정이 가독성 최고)
+  Color get onAccent => Colors.black;
 }

@@ -134,7 +134,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
     if (!mounted) return;
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('초대 코드'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -144,7 +144,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: _accentGreen,
+                color: dialogCtx.accentColor,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(code,
@@ -295,7 +295,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('냉장고 만들기'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _accentGreen,
+                            backgroundColor: context.accentColor,
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -477,7 +477,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                               icon: const Icon(LucideIcons.share2, size: 16),
                               label: const Text('초대 코드 발급'),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: _accentGreen,
+                                backgroundColor: context.accentColor,
                                 foregroundColor: Colors.black,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

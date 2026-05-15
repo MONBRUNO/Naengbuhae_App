@@ -319,7 +319,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   ElevatedButton(
                     onPressed: _verifyingCode ? null : _verifyCode,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFCDFF00),
+                      backgroundColor: context.accentColor,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -453,7 +453,7 @@ class _SignupScreenState extends State<SignupScreen> {
               child: ElevatedButton(
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

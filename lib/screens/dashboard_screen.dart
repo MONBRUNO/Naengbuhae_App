@@ -245,7 +245,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (added == true) _fetch();
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: _accentGreen,
+          backgroundColor: context.accentColor,
           foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -236,7 +236,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _saveAll,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accentGreen,
+                    backgroundColor: context.accentColor,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -291,7 +291,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                 icon: const Icon(Icons.photo_camera_outlined),
                 label: const Text('영수증 촬영/선택'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

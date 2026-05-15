@@ -97,7 +97,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: _accentGreen,
+              backgroundColor: ctx.accentColor,
               foregroundColor: Colors.black,
             ),
             child: const Text('장보기에 추가'),

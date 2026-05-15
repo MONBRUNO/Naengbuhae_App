@@ -94,14 +94,16 @@ class _NutritionScreenState extends State<NutritionScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
-          // 영양 요약 카드 (CDFF00 그라데이션)
+          // 영양 요약 카드 (라이트=CDFF00, 다크=채도 낮춘 라임 그라데이션)
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [Color(0xFFCDFF00), Color(0xFFB8E600)],
+                colors: context.isDark
+                    ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                    : const [Color(0xFFCDFF00), Color(0xFFB8E600)],
               ),
               borderRadius: BorderRadius.circular(16),
             ),
@@ -168,7 +170,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                             value: ratio,
                             minHeight: 6,
                             backgroundColor: context.isDark ? const Color(0xFF374151) : Colors.white,
-                            valueColor: const AlwaysStoppedAnimation(Color(0xFFCDFF00)),
+                            valueColor: AlwaysStoppedAnimation(context.accentColor),
                           ),
                         ),
                       ],

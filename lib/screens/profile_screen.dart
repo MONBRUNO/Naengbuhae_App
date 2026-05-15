@@ -192,14 +192,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
         const SizedBox(height: 20),
 
-        // 가입/로그인 CTA 카드
+        // 가입/로그인 CTA 카드 — 다크에서는 라임 채도/명도 낮춤
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [_accentGreen, _accentGreenDeep],
+              colors: context.isDark
+                  ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                  : const [_accentGreen, _accentGreenDeep],
             ),
             borderRadius: BorderRadius.circular(16),
           ),
@@ -478,10 +480,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [_accentGreen, _accentGreenDeep],
+                      colors: context.isDark
+                          ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                          : const [_accentGreen, _accentGreenDeep],
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -549,7 +553,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             width: 48,
                             height: 48,
-                            decoration: const BoxDecoration(color: _accentGreen, shape: BoxShape.circle),
+                            decoration: BoxDecoration(color: context.accentColor, shape: BoxShape.circle),
                             child: const Icon(Icons.person, size: 24, color: Colors.black),
                           ),
                           const SizedBox(width: 12),
@@ -850,10 +854,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   '맞춤 레시피',
                   Icons.restaurant_menu,
                   Colors.black,
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [_accentGreen, _accentGreenDeep],
+                    colors: context.isDark
+                        ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                        : const [_accentGreen, _accentGreenDeep],
                   ),
                   textColor: Colors.black,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecipesScreen())),

@@ -370,7 +370,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   child: ElevatedButton.icon(
                     onPressed: () => setState(() => _showAddForm = true),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: _accentGreen,
+                      backgroundColor: context.accentColor,
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -486,7 +486,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 child: ElevatedButton(
                   onPressed: _add,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _accentGreen,
+                    backgroundColor: context.accentColor,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -665,7 +665,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
               ElevatedButton(
                 onPressed: transferring ? null : () => _transfer(item),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
+                  backgroundColor: context.accentColor,
                   foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
