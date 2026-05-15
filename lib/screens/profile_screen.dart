@@ -222,8 +222,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(builder: (_) => const SignupScreen()),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        foregroundColor: Colors.white,
+                        backgroundColor: context.isDark ? Colors.white : Colors.black,
+                        foregroundColor: context.isDark ? Colors.black : Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
@@ -237,8 +237,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         MaterialPageRoute(builder: (_) => const LoginScreen()),
                       ),
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
+                        backgroundColor: context.surfaceBg,
+                        foregroundColor: context.textColor,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         side: BorderSide.none,
