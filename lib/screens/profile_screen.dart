@@ -200,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: context.isDark
-                  ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                  ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
                   : const [_accentGreen, _accentGreenDeep],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -484,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: context.isDark
-                          ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                          ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
                           : const [_accentGreen, _accentGreenDeep],
                     ),
                     borderRadius: BorderRadius.circular(16),
@@ -677,15 +677,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Icon(Icons.notifications_none, color: context.textColor, size: 20),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('알림',
+                          const Text('알림',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text('받은 알림 내역 (가족 활동 / 멤버 변경)',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                              style: TextStyle(fontSize: 11, color: context.subTextColor)),
                         ],
                       ),
                     ),
@@ -741,12 +741,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('냉장고 관리',
+                        children: [
+                          const Text('냉장고 관리',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text('가족 공유, 초대 코드, 김치냉장고 추가 등',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                              style: TextStyle(fontSize: 11, color: context.subTextColor)),
                         ],
                       ),
                     ),
@@ -783,12 +783,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('가족 활동',
+                        children: [
+                          const Text('가족 활동',
                               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text('멤버별 추가/소비 + 자주 사는 식재료 TOP',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                              style: TextStyle(fontSize: 11, color: context.subTextColor)),
                         ],
                       ),
                     ),
@@ -858,7 +858,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: context.isDark
-                        ? const [Color(0xFFA3CC0E), Color(0xFF8FB300)]
+                        ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
                         : const [_accentGreen, _accentGreenDeep],
                   ),
                   textColor: Colors.black,

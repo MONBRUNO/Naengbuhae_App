@@ -66,11 +66,11 @@ class NaengbuhaeApp extends StatelessWidget {
         // 다크 테마 — Material 3 ColorScheme.fromSeed로 자동 생성.
         // 기존 화면에 하드코딩된 색(`Color(0xFFF5F5F5)` 등)은 그대로 라이트 톤을 유지하므로
         // 시간이 지나면서 Theme.of(context).colorScheme 기반으로 점진적으로 이행 필요.
-        // 액센트는 형광 #CDFF00을 다크에서 채도 낮춘 #A3CC0E로 (눈피로 감소).
+        // 액센트는 형광 #CDFF00이 다크에서 너무 눈아파서 차분한 청록 #7BCAD5로.
         darkTheme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFFA3CC0E),
+            seedColor: const Color(0xFF7BCAD5),
             brightness: Brightness.dark,
           ),
           scaffoldBackgroundColor: const Color(0xFF111827),
@@ -81,7 +81,7 @@ class NaengbuhaeApp extends StatelessWidget {
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFA3CC0E),
+              backgroundColor: const Color(0xFF7BCAD5),
               foregroundColor: Colors.black,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
