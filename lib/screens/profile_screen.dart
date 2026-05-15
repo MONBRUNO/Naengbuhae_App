@@ -7,6 +7,7 @@ import '../api/auth_storage.dart';
 import '../services/fcm_service.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
+import '../state/theme_mode_pref.dart';
 import '../state/unread_notification_count.dart';
 import '../utils/format.dart';
 import '../widgets/login_required.dart';
@@ -276,6 +277,79 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  // 다크/라이트/시스템 모드 토글. 마이페이지 알림 설정 아래.
+  Widget _themeModeSection() {
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeModePref.notifier,
+      builder: (_, current, __) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.brightness_6, size: 18),
+                  SizedBox(width: 8),
+                  Text('테마', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _themeChip('시스템', ThemeMode.system, current),
+                  const SizedBox(width: 8),
+                  _themeChip('라이트', ThemeMode.light, current),
+                  const SizedBox(width: 8),
+                  _themeChip('다크', ThemeMode.dark, current),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _themeChip(String label, ThemeMode value, ThemeMode current) {
+    final selected = value == current;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => ThemeModePref.set(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: selected
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -720,6 +794,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
           // 알림 설정
           const NotificationSettingsSection(),
+          _themeModeSection(),
 
           // 알레르기 정보
           if (allergies != null && allergies.isNotEmpty)

@@ -8,6 +8,7 @@ import 'services/notification_router.dart';
 import 'services/notification_service.dart';
 import 'state/guest_mode.dart';
 import 'state/notification_settings.dart';
+import 'state/theme_mode_pref.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +17,8 @@ void main() async {
   await NotificationService.init();
   // 게스트 플래그 미리 로드 → _AuthGate가 동기적으로 판단 가능
   await GuestMode.load();
+  // 테마 모드(system/light/dark) 로드 — MaterialApp이 notifier를 listen
+  await ThemeModePref.load();
   // FCM은 비차단으로 — 초기화 실패해도 로컬 알림은 계속 동작해야 함
   // ignore: unawaited_futures
   FcmService.init();
@@ -30,35 +33,64 @@ class NaengbuhaeApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '냉부해',
-      debugShowCheckedModeBanner: false,
-      // 알림 탭 핸들러에서 화면 전환할 때 사용
-      navigatorKey: NotificationRouter.navigatorKey,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: _accentGreen,
-          brightness: Brightness.light,
-        ),
-        scaffoldBackgroundColor: Colors.white,
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
-          elevation: 0,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.black,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: ThemeModePref.notifier,
+      builder: (_, mode, __) => MaterialApp(
+        title: '냉부해',
+        debugShowCheckedModeBanner: false,
+        // 알림 탭 핸들러에서 화면 전환할 때 사용
+        navigatorKey: NotificationRouter.navigatorKey,
+        themeMode: mode,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: _accentGreen,
+            brightness: Brightness.light,
+          ),
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            foregroundColor: Colors.black,
+            elevation: 0,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            ),
           ),
         ),
+        // 다크 테마 — Material 3 ColorScheme.fromSeed로 자동 생성.
+        // 기존 화면에 하드코딩된 색(`Color(0xFFF5F5F5)` 등)은 그대로 라이트 톤을 유지하므로
+        // 시간이 지나면서 Theme.of(context).colorScheme 기반으로 점진적으로 이행 필요.
+        darkTheme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: _accentGreen,
+            brightness: Brightness.dark,
+          ),
+          scaffoldBackgroundColor: const Color(0xFF111827),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF111827),
+            foregroundColor: Colors.white,
+            elevation: 0,
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _accentGreen,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        // 시작 시 토큰 있으면 홈, 없으면 로그인
+        home: const _AuthGate(),
       ),
-      // 시작 시 토큰 있으면 홈, 없으면 로그인
-      home: const _AuthGate(),
     );
   }
 }
