@@ -595,7 +595,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.red.shade100,
+                            color: context.isDark ? const Color(0xFF450A0A) : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
