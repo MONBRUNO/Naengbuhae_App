@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../utils/format.dart';
+import '../utils/theme_colors.dart';
 
 // 웹의 NutritionAnalysis.tsx 단순화 버전.
 // 백엔드는 식재료별 영양 데이터를 주지 않아서, 사용자 권장 칼로리 + 식재료 개수만 표시.
@@ -143,7 +144,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
           else ...[
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12)),
               child: Column(
                 children: categoryCount.entries.map((e) {
                   final ratio = e.value / totalCount;
@@ -221,7 +222,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
           // 알레르기 등록 정보
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
+            decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(12)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

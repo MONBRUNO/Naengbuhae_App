@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../api/api_client.dart';
+import '../utils/theme_colors.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -94,7 +95,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           decoration: InputDecoration(
             hintText: 'email@example.com',
             filled: true,
-            fillColor: const Color(0xFFF5F5F5),
+            fillColor: context.cardBg,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
