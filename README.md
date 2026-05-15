@@ -99,11 +99,32 @@
 
 ---
 
-### 다크 모드 인프라
-- `state/theme_mode_pref.dart` — SharedPreferences + ValueNotifier
-- `main.dart`의 MaterialApp이 themeMode 구독 + `darkTheme` (ColorScheme.fromSeed `brightness.dark`)
-- ProfileScreen에 시스템/라이트/다크 3단 토글
-- 일부 하드코딩 색(`Color(0xFFF5F5F5)` 등)은 라이트 톤 그대로라 점진적 이행 필요
+### 디자인 시스템 / 다크모드 (웹 외주 디자인과 통일)
+
+**색 토큰 — `utils/theme_colors.dart` `ThemeColorsContext` 익스텐션**
+- 화면 코드는 `context.cardBg` / `boxBg` / `surfaceBg` / `borderColor` / `textColor` /
+  `subTextColor` / `accentColor` / `accentDeep` / `onAccent` / `skyAccent` / `statusDanger…` 호출
+- 다크 팔레트(웹 theme.css와 동일): 배경 `#08090A` · 카드 `#191C20` · 표면 `#23272D` ·
+  텍스트 `#F2F3EE` · 보조텍스트 알파 `#9EF2F3EE`
+- `accentColor` = primary CTA: 라이트 라임 `#CDFF00` / 다크 off-white `#F2F3EE`
+- `skyAccent` = AI·추천·선택표시·활성탭: 다크 `#8BCEEA` / 라이트 `#2563EB`
+- `statusDanger/Warning/Safe` 다크 튜닝값(`#FF5A5F`/`#F5C44A`/`#34D97A`)
+
+**`main.dart` darkTheme**
+- scaffold/appbar `#08090A`, `colorScheme` surface=`#191C20`·primary=off-white,
+  ElevatedButton 배경 off-white + 어두운 글자, seed=sky
+
+**테마 토글 — system 제거**
+- `state/theme_mode_pref.dart` — `ThemeMode.light | dark` 만 (기본 라이트).
+  기존 `'system'` 저장값은 load 시 light/dark로 확정 마이그레이션
+- ProfileScreen 토글 칩 2개(라이트/다크)
+
+**화면 적용**
+- 그라데이션·하드코딩 라이트색 → `context.*` 토큰으로 분기 (대시보드/우선순위/영양/
+  프로필/식재료/장보기/레시피/냉장고관리/영수증/회원가입 등 전반)
+- 프로필 맞춤기능 4카드: 컬러 배경 제거 → `cardBg`+`borderColor`, 아이콘 `skyAccent`
+- `main_scaffold` 하단 네비 활성 탭 `skyAccent`
+- priority "외 N개 더 보기" → `TabIndex.select(1)` 식재료 탭 이동(sky)
 
 ---
 
