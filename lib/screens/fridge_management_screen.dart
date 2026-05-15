@@ -310,10 +310,10 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                           icon: const Icon(Icons.vpn_key_outlined, size: 18),
                           label: const Text('코드로 가입'),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.black,
+                            foregroundColor: context.textColor,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            side: const BorderSide(color: Color(0xFFE5E7EB)),
+                            side: BorderSide(color: context.borderColor),
                             textStyle: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
