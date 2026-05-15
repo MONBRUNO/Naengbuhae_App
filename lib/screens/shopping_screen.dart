@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
 import '../widgets/login_required.dart';
 
@@ -34,6 +35,10 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   bool _selectionMode = false;
   final Set<int> _selectedIds = {};
   bool _bulkDeleting = false;
+
+  // 자동 제안 — 가족이 자주 비웠는데 지금 냉장고/장보기 모두에 없는 식재료
+  List<Map<String, dynamic>> _suggestions = [];
+  String? _addingSuggestion;
 
   @override
   void initState() {
@@ -92,10 +97,51 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
       }
       final data = jsonDecode(utf8.decode(res.bodyBytes)) as List;
       setState(() => _items = data.cast<Map<String, dynamic>>());
+      // 장보기 갱신 후 제안도 같이 — 제안에 있던 식재료가 장보기에 들어가면 사라지도록
+      // ignore: unawaited_futures
+      _fetchSuggestions();
     } catch (e) {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _fetchSuggestions() async {
+    final fridgeId = FridgeContext.selectedId;
+    try {
+      final path = fridgeId != null
+          ? '/api/shopping-list/suggestions?fridgeId=$fridgeId&limit=5'
+          : '/api/shopping-list/suggestions?limit=5';
+      final res = await ApiClient.get(path);
+      if (res.statusCode != 200) return;
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as List;
+      if (mounted) {
+        setState(() => _suggestions = data.cast<Map<String, dynamic>>());
+      }
+    } catch (_) {
+      // 무시 — 다음 fetch에서 다시 시도
+    }
+  }
+
+  Future<void> _addSuggestion(String name) async {
+    if (_addingSuggestion != null) return;
+    setState(() => _addingSuggestion = name);
+    try {
+      final res = await ApiClient.post('/api/shopping-list', body: {
+        'name': name,
+        'quantity': 1.0,
+        'unit': '개',
+      });
+      if (res.statusCode == 200) {
+        await _fetch(); // 장보기 + 제안 동시 갱신
+      } else {
+        _snack('추가 실패 (${res.statusCode})');
+      }
+    } catch (_) {
+      _snack('서버 연결 실패');
+    } finally {
+      if (mounted) setState(() => _addingSuggestion = null);
     }
   }
 
@@ -353,6 +399,12 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
             const SizedBox(height: 16),
           ],
 
+          // 자동 제안 — 가족이 자주 비웠는데 지금 없는 식재료
+          if (!_selectionMode && !_showAddForm && _suggestions.isNotEmpty) ...[
+            _suggestionsCard(),
+            const SizedBox(height: 16),
+          ],
+
           // 빈 상태
           if (_items.isEmpty)
             const Padding(
@@ -462,6 +514,76 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _suggestionsCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFFF7FEE7), Colors.white],
+        ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFD9F99D)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: const [
+              Icon(Icons.auto_awesome, size: 14, color: Color(0xFF15803D)),
+              SizedBox(width: 6),
+              Text('이건 어때요?',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+              SizedBox(width: 8),
+              Text('자주 비우는데 지금 없어요',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _suggestions.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (_, i) {
+                final s = _suggestions[i];
+                final name = s['name']?.toString() ?? '';
+                final count = (s['count'] as num? ?? 0).toInt();
+                final adding = _addingSuggestion == name;
+                return GestureDetector(
+                  onTap: adding ? null : () => _addSuggestion(name),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFD9F99D)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(adding ? Icons.hourglass_top : Icons.add,
+                            size: 14, color: const Color(0xFF15803D)),
+                        const SizedBox(width: 4),
+                        Text(name,
+                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: 6),
+                        Text('${count}회',
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
