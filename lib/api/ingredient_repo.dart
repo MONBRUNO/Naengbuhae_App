@@ -53,4 +53,16 @@ class IngredientRepo {
     }
     return ApiClient.delete('/api/ingredients/$id');
   }
+
+  // 다중 선택 일괄 삭제. 게스트는 로컬에서 순차 삭제, 로그인이면 단일 요청으로 묶어 보낸다.
+  static Future<http.Response> bulkDelete(List<int> ids) async {
+    if (ids.isEmpty) return _ok({'success': true});
+    if (await GuestMode.isGuest()) {
+      for (final id in ids) {
+        await LocalIngredientStore.delete(id);
+      }
+      return _ok({'success': true});
+    }
+    return ApiClient.post('/api/ingredients/bulk-delete', body: {'ids': ids});
+  }
 }

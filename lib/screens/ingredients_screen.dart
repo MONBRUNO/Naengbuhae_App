@@ -40,6 +40,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
   bool _showExpiredOnly = false;
   final TextEditingController _searchController = TextEditingController();
 
+  // 다중 선택 모드. 활성화 시 카드를 탭하면 체크 토글, 상단 액션 바 표시.
+  bool _selectionMode = false;
+  final Set<int> _selectedIds = {};
+  bool _bulkDeleting = false;
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +80,68 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  void _toggleSelection(int id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _enterSelectionMode() {
+    setState(() {
+      _selectionMode = true;
+      _selectedIds.clear();
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _selectionMode = false;
+      _selectedIds.clear();
+    });
+  }
+
+  void _selectAllVisible() {
+    setState(() {
+      _selectedIds.addAll(_filtered.map((e) => e['id'] as int));
+    });
+  }
+
+  Future<void> _bulkDelete() async {
+    if (_selectedIds.isEmpty) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('삭제하시겠습니까?'),
+        content: Text('${_selectedIds.length}개의 식재료를 삭제합니다.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('삭제')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    setState(() => _bulkDeleting = true);
+    try {
+      final ids = _selectedIds.toList();
+      final res = await IngredientRepo.bulkDelete(ids);
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        _exitSelectionMode();
+        await _fetch();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('일괄 삭제 실패 (${res.statusCode})')));
+      }
+    } finally {
+      if (mounted) setState(() => _bulkDeleting = false);
     }
   }
 
@@ -157,7 +224,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(0, 32, 0, 24),
         children: [
-          // 헤더
+          // 헤더 — 선택 모드면 우측에 "취소" 버튼, 아니면 냉장고 선택
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
@@ -165,72 +232,137 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text('식재료 관리', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
-                    FridgeSelectorButton(),
+                  children: [
+                    const Text('식재료 관리', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+                    if (_selectionMode)
+                      TextButton(
+                        onPressed: _exitSelectionMode,
+                        child: const Text('취소',
+                            style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
+                      )
+                    else
+                      const FridgeSelectorButton(),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text('총 ${list.length}개',
-                    style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+                Text(
+                  _selectionMode ? '${_selectedIds.length}개 선택됨' : '총 ${list.length}개',
+                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
 
-          // 추가 + 영양 분석 버튼
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final added = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(builder: (_) => const IngredientEditScreen()),
-                  );
-                  if (added == true) _fetch();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                icon: const Icon(Icons.add),
-                label: const Text('식재료 추가하기'),
+          if (_selectionMode) ...[
+            // 일괄 액션 바
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _selectAllVisible,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text('전체 선택 (${list.length})',
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _selectedIds.isEmpty || _bulkDeleting ? null : _bulkDelete,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: Text(
+                        _bulkDeleting ? '삭제 중...' : '${_selectedIds.length}개 삭제',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  if (GuestMode.currentlyGuest) {
-                    LoginRequired.show(context, featureName: '영양 분석');
-                    return;
-                  }
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const NutritionScreen()),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF0FDF4),
-                  foregroundColor: const Color(0xFF15803D),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  side: const BorderSide(color: Color(0xFFBBF7D0), width: 2),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
+            const SizedBox(height: 16),
+          ] else ...[
+            // 추가 + 영양 분석 + 선택 모드 진입 버튼
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () async {
+                    final added = await Navigator.of(context).push<bool>(
+                      MaterialPageRoute(builder: (_) => const IngredientEditScreen()),
+                    );
+                    if (added == true) _fetch();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _accentGreen,
+                    foregroundColor: Colors.black,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  icon: const Icon(Icons.add),
+                  label: const Text('식재료 추가하기'),
                 ),
-                icon: const Icon(Icons.auto_awesome, size: 18),
-                label: const Text('영양 분석 보기'),
               ),
             ),
-          ),
-          const SizedBox(height: 16),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        if (GuestMode.currentlyGuest) {
+                          LoginRequired.show(context, featureName: '영양 분석');
+                          return;
+                        }
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const NutritionScreen()),
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF0FDF4),
+                        foregroundColor: const Color(0xFF15803D),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        side: const BorderSide(color: Color(0xFFBBF7D0), width: 2),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      icon: const Icon(Icons.auto_awesome, size: 18),
+                      label: const Text('영양 분석 보기'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: list.isEmpty ? null : _enterSelectionMode,
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF3F4F6),
+                      foregroundColor: const Color(0xFF374151),
+                      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: BorderSide.none,
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    icon: const Icon(Icons.check_box_outlined, size: 18),
+                    label: const Text('선택'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
 
           // 이름 검색
           Padding(
@@ -398,12 +530,18 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final s = getExpiryStatus(days);
     final c = statusColor(s);
     final warnings = (item['allergyWarnings'] as List?)?.cast<String>() ?? const [];
+    final id = item['id'] as int;
+    final isSelected = _selectedIds.contains(id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () async {
+        if (_selectionMode) {
+          _toggleSelection(id);
+          return;
+        }
         final updated = await Navigator.of(context).push<bool>(
           MaterialPageRoute(builder: (_) => IngredientEditScreen(existing: item)),
         );
@@ -412,14 +550,27 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: _selectionMode && isSelected
+              ? const Color(0xFFECFCCB) // 선택된 카드 = 연두 배경
+              : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(12),
+          border: _selectionMode && isSelected
+              ? Border.all(color: _accentGreen, width: 2)
+              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
+                if (_selectionMode) ...[
+                  Icon(
+                    isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                    color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                ],
                 Expanded(
                   child: Wrap(
                     crossAxisAlignment: WrapCrossAlignment.center,
@@ -458,10 +609,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
-                  onPressed: () => _delete(item),
-                ),
+                if (!_selectionMode)
+                  IconButton(
+                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
+                    onPressed: () => _delete(item),
+                  ),
               ],
             ),
             const SizedBox(height: 4),
