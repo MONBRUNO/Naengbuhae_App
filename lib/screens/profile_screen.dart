@@ -1065,7 +1065,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: LinearProgressIndicator(
             value: value,
             minHeight: 8,
-            backgroundColor: const Color(0xFFE5E7EB),
+            backgroundColor: context.borderColor,
             valueColor: AlwaysStoppedAnimation(color),
           ),
         ),
