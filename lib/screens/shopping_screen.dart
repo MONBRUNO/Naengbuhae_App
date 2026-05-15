@@ -627,7 +627,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
             if (_selectionMode)
               Icon(
                 isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
                 size: 22,
               )
             else
@@ -638,7 +638,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFD1D5DB), width: 2),
+                    border: Border.all(color: context.isDark ? const Color(0xFF4B5563) : const Color(0xFFD1D5DB), width: 2),
                   ),
                 ),
               ),
@@ -706,7 +706,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
               if (_selectionMode)
                 Icon(
                   isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                  color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
                   size: 22,
                 )
               else
