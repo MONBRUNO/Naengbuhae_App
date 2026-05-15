@@ -352,14 +352,18 @@ class _SignupScreenState extends State<SignupScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: selected ? Colors.black : const Color(0xFFF9FAFB),
+                          color: selected
+                              ? (context.isDark ? Colors.white : Colors.black)
+                              : context.boxBg,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
                           child: Text(
                             g,
                             style: TextStyle(
-                              color: selected ? Colors.white : const Color(0xFF6B7280),
+                              color: selected
+                                  ? (context.isDark ? Colors.black : Colors.white)
+                                  : context.subTextColor,
                               fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                             ),
                           ),
