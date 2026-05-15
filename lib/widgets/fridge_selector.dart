@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../screens/fridge_management_screen.dart';
 import '../state/fridge_context.dart';
+import '../utils/theme_colors.dart';
 
 // 현재 선택된 냉장고를 표시하고, 탭하면 다른 냉장고로 전환할 수 있는 버튼.
 // 메인 탭 화면들 헤더에 배치.
@@ -21,7 +22,7 @@ class FridgeSelectorButton extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFF3F4F6),
+              color: context.cardBg,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -93,7 +94,7 @@ class _FridgeSwitcherSheet extends StatelessWidget {
                   return ListTile(
                     leading: Icon(
                       isSelected ? LucideIcons.refrigerator : LucideIcons.refrigerator,
-                      color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                      color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
                     ),
                     title: Text(f['name']?.toString() ?? '',
                         style: TextStyle(
