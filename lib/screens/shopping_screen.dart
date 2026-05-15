@@ -30,6 +30,11 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   String _unit = '개';
   final Set<int> _transferringIds = {};
 
+  // 다중 선택 모드 — 카드 탭으로 토글, 액션바에서 일괄 삭제.
+  bool _selectionMode = false;
+  final Set<int> _selectedIds = {};
+  bool _bulkDeleting = false;
+
   @override
   void initState() {
     super.initState();
@@ -133,6 +138,67 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     if (res.statusCode == 200) _fetch();
   }
 
+  void _toggleSelection(int id) {
+    setState(() {
+      if (_selectedIds.contains(id)) {
+        _selectedIds.remove(id);
+      } else {
+        _selectedIds.add(id);
+      }
+    });
+  }
+
+  void _enterSelectionMode() {
+    setState(() {
+      _selectionMode = true;
+      _selectedIds.clear();
+    });
+  }
+
+  void _exitSelectionMode() {
+    setState(() {
+      _selectionMode = false;
+      _selectedIds.clear();
+    });
+  }
+
+  void _selectAllVisible() {
+    setState(() {
+      _selectedIds.addAll(_items.map((e) => e['id'] as int));
+    });
+  }
+
+  Future<void> _bulkDelete() async {
+    if (_selectedIds.isEmpty) return;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('삭제하시겠습니까?'),
+        content: Text('${_selectedIds.length}개의 장보기 항목을 삭제합니다.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('삭제')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() => _bulkDeleting = true);
+    try {
+      final res = await ApiClient.post('/api/shopping-list/bulk-delete', body: {
+        'ids': _selectedIds.toList(),
+      });
+      if (!mounted) return;
+      if (res.statusCode == 200) {
+        _exitSelectionMode();
+        await _fetch();
+      } else {
+        _snack('일괄 삭제 실패 (${res.statusCode})');
+      }
+    } finally {
+      if (mounted) setState(() => _bulkDeleting = false);
+    }
+  }
+
   // 미완료 항목 옆 "냉장고 이관" 버튼.
   // 백엔드는 per-item transfer를 지원하지 않으므로 toggle → move-to-fridge 순서로 호출.
   // 다른 체크된 항목이 있으면 같이 옮겨가지만 일반적으로 문제 없음.
@@ -193,33 +259,99 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
         children: [
-          // 헤더
-          const Text('장보기 리스트', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+          // 헤더 (선택 모드면 우측 "취소", 아니면 일반)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('장보기 리스트', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+              if (_selectionMode)
+                TextButton(
+                  onPressed: _exitSelectionMode,
+                  child: const Text('취소',
+                      style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
+                ),
+            ],
+          ),
           const SizedBox(height: 4),
-          Text('총 ${_items.length}개 · 완료 ${checked.length}개',
-              style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+          Text(
+            _selectionMode
+                ? '${_selectedIds.length}개 선택됨'
+                : '총 ${_items.length}개 · 완료 ${checked.length}개',
+            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+          ),
           const SizedBox(height: 16),
 
-          // 추가 버튼 또는 인라인 폼
-          if (!_showAddForm)
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => setState(() => _showAddForm = true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: _accentGreen,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          if (_selectionMode) ...[
+            // 일괄 액션 바
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _selectAllVisible,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text('전체 선택 (${_items.length})',
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
+                  ),
                 ),
-                icon: const Icon(Icons.add),
-                label: const Text('항목 추가하기'),
-              ),
-            )
-          else
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _selectedIds.isEmpty || _bulkDeleting ? null : _bulkDelete,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFDC2626),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Text(
+                      _bulkDeleting ? '삭제 중...' : '${_selectedIds.length}개 삭제',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ] else if (!_showAddForm) ...[
+            // 추가 버튼 + 선택 모드 진입
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () => setState(() => _showAddForm = true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _accentGreen,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    icon: const Icon(Icons.add),
+                    label: const Text('항목 추가하기'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: _items.isEmpty ? null : _enterSelectionMode,
+                  style: OutlinedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF3F4F6),
+                    foregroundColor: const Color(0xFF374151),
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide.none,
+                  ),
+                  child: const Icon(Icons.check_box_outlined, size: 18),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+          ] else ...[
             _addForm(),
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
+          ],
 
           // 빈 상태
           if (_items.isEmpty)
@@ -349,104 +481,146 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   Widget _uncheckedTile(Map<String, dynamic> item) {
     final id = item['id'] as int;
     final transferring = _transferringIds.contains(id);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => _toggle(item),
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFD1D5DB), width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item['name']?.toString() ?? '',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                Text('${item['quantity']}${item['unit'] ?? ''}',
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => _delete(item),
-            icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(width: 4),
-          ElevatedButton(
-            onPressed: transferring ? null : () => _transfer(item),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _accentGreen,
-              foregroundColor: Colors.black,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(transferring ? '이관 중...' : '냉장고 이관'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _checkedTile(Map<String, dynamic> item) {
-    return Opacity(
-      opacity: 0.6,
+    final isSelected = _selectedIds.contains(id);
+    return GestureDetector(
+      onTap: _selectionMode ? () => _toggleSelection(id) : null,
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(
+          color: _selectionMode && isSelected
+              ? const Color(0xFFECFCCB)
+              : const Color(0xFFF5F5F5),
+          borderRadius: BorderRadius.circular(12),
+          border: _selectionMode && isSelected
+              ? Border.all(color: _accentGreen, width: 2)
+              : null,
+        ),
         child: Row(
           children: [
-            GestureDetector(
-              onTap: () => _toggle(item),
-              child: Container(
-                width: 24,
-                height: 24,
-                decoration: const BoxDecoration(shape: BoxShape.circle, color: _accentGreen),
-                child: const Icon(Icons.check, size: 16, color: Colors.black),
+            if (_selectionMode)
+              Icon(
+                isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                size: 22,
+              )
+            else
+              GestureDetector(
+                onTap: () => _toggle(item),
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFD1D5DB), width: 2),
+                  ),
+                ),
               ),
-            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    item['name']?.toString() ?? '',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF6B7280),
-                      decoration: TextDecoration.lineThrough,
-                    ),
-                  ),
+                  Text(item['name']?.toString() ?? '',
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   Text('${item['quantity']}${item['unit'] ?? ''}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
                 ],
               ),
             ),
-            IconButton(
-              onPressed: () => _delete(item),
-              icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
-              padding: const EdgeInsets.all(8),
-              constraints: const BoxConstraints(),
-            ),
+            if (!_selectionMode) ...[
+              IconButton(
+                onPressed: () => _delete(item),
+                icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
+                padding: const EdgeInsets.all(8),
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 4),
+              ElevatedButton(
+                onPressed: transferring ? null : () => _transfer(item),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: _accentGreen,
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(transferring ? '이관 중...' : '냉장고 이관'),
+              ),
+            ],
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _checkedTile(Map<String, dynamic> item) {
+    final id = item['id'] as int;
+    final isSelected = _selectedIds.contains(id);
+    return GestureDetector(
+      onTap: _selectionMode ? () => _toggleSelection(id) : null,
+      child: Opacity(
+        opacity: _selectionMode && isSelected ? 1.0 : 0.6,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _selectionMode && isSelected
+                ? const Color(0xFFECFCCB)
+                : const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(12),
+            border: _selectionMode && isSelected
+                ? Border.all(color: _accentGreen, width: 2)
+                : null,
+          ),
+          child: Row(
+            children: [
+              if (_selectionMode)
+                Icon(
+                  isSelected ? Icons.check_box : Icons.check_box_outline_blank,
+                  color: isSelected ? Colors.black : const Color(0xFF9CA3AF),
+                  size: 22,
+                )
+              else
+                GestureDetector(
+                  onTap: () => _toggle(item),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: const BoxDecoration(shape: BoxShape.circle, color: _accentGreen),
+                    child: const Icon(Icons.check, size: 16, color: Colors.black),
+                  ),
+                ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name']?.toString() ?? '',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF6B7280),
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    Text('${item['quantity']}${item['unit'] ?? ''}',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                  ],
+                ),
+              ),
+              if (!_selectionMode)
+                IconButton(
+                  onPressed: () => _delete(item),
+                  icon: const Icon(Icons.delete_outline, color: Color(0xFFEF4444), size: 18),
+                  padding: const EdgeInsets.all(8),
+                  constraints: const BoxConstraints(),
+                ),
+            ],
+          ),
         ),
       ),
     );
