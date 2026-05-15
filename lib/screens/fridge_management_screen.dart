@@ -341,14 +341,14 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
           decoration: BoxDecoration(
             color: context.boxBg,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE5E7EB)),
+            border: Border.all(color: context.borderColor),
           ),
           child: Row(
             children: [
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
                 child: const Icon(LucideIcons.refrigerator, size: 20),
               ),
               const SizedBox(width: 12),
@@ -385,7 +385,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: context.surfaceBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -434,7 +434,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
+                              color: context.cardBg,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: const Icon(LucideIcons.refrigerator, size: 20),
@@ -550,7 +550,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
           Container(
             width: 28,
             height: 28,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(20)),
             child: const Icon(Icons.person_outline, size: 16, color: Color(0xFF6B7280)),
           ),
           const SizedBox(width: 10),
@@ -581,16 +581,16 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
   }
 
   Widget _actionRow(String label, IconData icon, VoidCallback onTap, {bool destructive = false}) {
-    final color = destructive ? const Color(0xFFEF4444) : Colors.black;
+    final color = destructive ? const Color(0xFFEF4444) : context.textColor;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: context.surfaceBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.borderColor),
         ),
         child: Row(
           children: [

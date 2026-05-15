@@ -470,12 +470,12 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         decoration: BoxDecoration(
-                          color: selected ? _accentGreen : const Color(0xFFF3F4F6),
+                          color: selected ? _accentGreen : context.cardBg,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Center(
                           child: Text(s, style: TextStyle(
-                            color: selected ? Colors.black : const Color(0xFF6B7280),
+                            color: selected ? Colors.black : context.subTextColor,
                             fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                           )),
                         ),
