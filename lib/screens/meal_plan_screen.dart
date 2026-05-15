@@ -202,13 +202,15 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFF7FEE7), Color(0xFFFEFCE8)],
+                  colors: context.isDark
+                      ? const [Color(0xFF365314), Color(0xFF422006)]
+                      : const [Color(0xFFF7FEE7), Color(0xFFFEFCE8)],
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFD9F99D)),
+                border: Border.all(color: context.isDark ? const Color(0xFF4D7C0F) : const Color(0xFFD9F99D)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -241,13 +243,15 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFFFF7ED), Color(0xFFFEFCE8)],
+                  colors: context.isDark
+                      ? const [Color(0xFF431407), Color(0xFF422006)]
+                      : const [Color(0xFFFFF7ED), Color(0xFFFEFCE8)],
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFFED7AA)),
+                border: Border.all(color: context.isDark ? const Color(0xFF9A3412) : const Color(0xFFFED7AA)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,9 +308,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEFCE8),
+                color: context.isDark ? const Color(0xFF422006) : const Color(0xFFFEFCE8),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFEF08A)),
+                border: Border.all(color: context.isDark ? const Color(0xFF854D0E) : const Color(0xFFFEF08A)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
