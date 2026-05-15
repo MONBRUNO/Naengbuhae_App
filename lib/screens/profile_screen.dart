@@ -10,6 +10,7 @@ import '../state/guest_mode.dart';
 import '../utils/format.dart';
 import '../widgets/login_required.dart';
 import '../widgets/notification_settings_section.dart';
+import 'change_password_screen.dart';
 import 'family_activity_screen.dart';
 import 'fridge_management_screen.dart';
 import 'login_screen.dart';
@@ -845,25 +846,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
 
-          // 회원 탈퇴
+          // 계정 관리 — LOCAL 가입자만 비밀번호 변경 노출, 회원 탈퇴는 공통
           Container(
             margin: const EdgeInsets.only(top: 24),
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: const BoxDecoration(
               border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
             ),
-            child: Center(
-              child: TextButton(
-                onPressed: _deleteAccount,
-                child: const Text(
-                  '회원 탈퇴',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF6B7280),
-                    decoration: TextDecoration.underline,
+            child: Column(
+              children: [
+                if (p['provider'] == 'LOCAL')
+                  TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+                    ),
+                    child: const Text(
+                      '비밀번호 변경',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF374151),
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                TextButton(
+                  onPressed: _deleteAccount,
+                  child: const Text(
+                    '회원 탈퇴',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFF6B7280),
+                      decoration: TextDecoration.underline,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
