@@ -167,7 +167,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                           child: LinearProgressIndicator(
                             value: ratio,
                             minHeight: 6,
-                            backgroundColor: Colors.white,
+                            backgroundColor: context.isDark ? const Color(0xFF374151) : Colors.white,
                             valueColor: const AlwaysStoppedAnimation(Color(0xFFCDFF00)),
                           ),
                         ),
