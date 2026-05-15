@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../api/api_client.dart';
 import '../state/fridge_context.dart';
+import '../utils/theme_colors.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 const _categories = ['채소', '육류', '유제품', '곡물', '해산물', '과일',
@@ -315,10 +316,14 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
       decoration: BoxDecoration(
-        color: item.selected ? const Color(0xFFF9FAFB) : const Color(0xFFFEF2F2),
+        color: item.selected
+            ? context.boxBg
+            : (context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2)),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: item.selected ? const Color(0xFFE5E7EB) : const Color(0xFFFECACA),
+          color: item.selected
+              ? context.borderColor
+              : (context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
         ),
       ),
       child: Column(
@@ -385,10 +390,10 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                       filled: true,
-                      fillColor: Colors.white,
+                      fillColor: context.surfaceBg,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+                        borderSide: BorderSide(color: context.borderColor),
                       ),
                     ),
                     style: const TextStyle(fontSize: 13),
@@ -424,9 +429,9 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceBg,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
+        border: Border.all(color: context.borderColor),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
