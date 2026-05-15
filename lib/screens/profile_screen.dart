@@ -934,11 +934,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
                     ),
-                    child: const Text(
+                    child: Text(
                       '비밀번호 변경',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Color(0xFF374151),
+                        color: context.subTextColor,
                         decoration: TextDecoration.underline,
                       ),
                     ),

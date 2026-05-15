@@ -137,7 +137,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(item['body']?.toString() ?? '',
-                      style: const TextStyle(fontSize: 13, color: Color(0xFF374151), height: 1.4)),
+                      style: TextStyle(fontSize: 13, color: context.subTextColor, height: 1.4)),
                   const SizedBox(height: 6),
                   Text(_formatTime(item['createdAt']?.toString()),
                       style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
