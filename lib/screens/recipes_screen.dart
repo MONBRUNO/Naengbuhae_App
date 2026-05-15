@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../utils/theme_colors.dart';
 import 'recipe_detail_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
@@ -224,7 +225,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF5F5F5),
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

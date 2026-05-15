@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/login_required.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
@@ -446,7 +447,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -611,8 +612,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _selectionMode && isSelected
-              ? const Color(0xFFECFCCB)
-              : const Color(0xFFF5F5F5),
+              ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB))
+              : context.cardBg,
           borderRadius: BorderRadius.circular(12),
           border: _selectionMode && isSelected
               ? Border.all(color: _accentGreen, width: 2)
@@ -690,8 +691,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: _selectionMode && isSelected
-                ? const Color(0xFFECFCCB)
-                : const Color(0xFFF5F5F5),
+                ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB))
+                : context.cardBg,
             borderRadius: BorderRadius.circular(12),
             border: _selectionMode && isSelected
                 ? Border.all(color: _accentGreen, width: 2)

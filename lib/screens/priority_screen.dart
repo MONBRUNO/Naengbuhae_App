@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
 import '../utils/expiry.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/donut_chart.dart';
 import '../widgets/fridge_selector.dart';
 
@@ -319,7 +320,7 @@ class _PriorityScreenState extends State<PriorityScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
