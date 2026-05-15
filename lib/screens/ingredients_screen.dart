@@ -349,8 +349,8 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   OutlinedButton.icon(
                     onPressed: list.isEmpty ? null : _enterSelectionMode,
                     style: OutlinedButton.styleFrom(
-                      backgroundColor: const Color(0xFFF3F4F6),
-                      foregroundColor: const Color(0xFF374151),
+                      backgroundColor: context.cardBg,
+                      foregroundColor: context.isDark ? const Color(0xFFE5E7EB) : const Color(0xFF374151),
                       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       side: BorderSide.none,
@@ -410,13 +410,13 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? _accentGreen : const Color(0xFFF3F4F6),
+                      color: selected ? _accentGreen : context.cardBg,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Center(
                       child: Text(c, style: TextStyle(
                         fontSize: 13,
-                        color: selected ? Colors.black : const Color(0xFF6B7280),
+                        color: selected ? Colors.black : (context.isDark ? const Color(0xFFD1D5DB) : const Color(0xFF6B7280)),
                         fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                       )),
                     ),

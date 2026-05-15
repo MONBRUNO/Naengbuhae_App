@@ -370,7 +370,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _accentGreen : const Color(0xFFF3F4F6),
+          color: selected ? _accentGreen : context.cardBg,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label, style: TextStyle(
@@ -397,7 +397,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
           Container(
             width: 36,
             height: 36,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+            decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(20)),
             child: const Icon(Icons.person_outline, size: 18, color: Color(0xFF6B7280)),
           ),
           const SizedBox(width: 10),
@@ -444,7 +444,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
               width: 24,
               height: 24,
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+              decoration: BoxDecoration(color: context.surfaceBg, shape: BoxShape.circle),
               child: Text('${i + 1}',
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
             ),
