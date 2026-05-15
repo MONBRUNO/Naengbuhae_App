@@ -371,7 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
                 child: Icon(icon, color: const Color(0xFF9CA3AF), size: 20),
               ),
               const SizedBox(width: 12),
@@ -438,8 +438,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // 헤더
           Container(
             padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
-            decoration: const BoxDecoration(
-              border: Border(bottom: BorderSide(color: Color(0xFFF3F4F6))),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: context.borderColor)),
             ),
             child: Row(
               children: [
@@ -522,13 +522,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [Color(0xFFF9FAFB), Colors.white],
+                  colors: context.isDark
+                      ? const [Color(0xFF111827), Color(0xFF1F2937)]
+                      : const [Color(0xFFF9FAFB), Colors.white],
                 ),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFFE5E7EB)),
+                border: Border.all(color: context.borderColor),
               ),
               child: Column(
                 children: [
@@ -667,8 +669,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.notifications_none, color: Colors.black, size: 20),
+                      decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.notifications_none, color: context.textColor, size: 20),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -728,8 +730,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.kitchen_outlined, color: Colors.black, size: 20),
+                      decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.kitchen_outlined, color: context.textColor, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -770,8 +772,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       width: 40,
                       height: 40,
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.insights, color: Colors.black, size: 20),
+                      decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
+                      child: Icon(Icons.insights, color: context.textColor, size: 20),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -922,8 +924,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             margin: const EdgeInsets.only(top: 24),
             padding: const EdgeInsets.symmetric(vertical: 16),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: Color(0xFFF3F4F6))),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: context.borderColor)),
             ),
             child: Column(
               children: [
@@ -964,9 +966,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: context.surfaceBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFF3F4F6)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -976,7 +978,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Text(value, style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? Colors.black,
+            color: valueColor ?? context.textColor,
           )),
         ],
       ),
@@ -992,7 +994,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(8)),
             child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 12),
