@@ -336,12 +336,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? _accentGreen : const Color(0xFFF3F4F6),
+          color: selected ? _accentGreen : context.cardBg,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(label, style: TextStyle(
           fontSize: 13,
-          color: selected ? Colors.black : const Color(0xFF6B7280),
+          color: selected ? Colors.black : context.subTextColor,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
         )),
       ),
@@ -356,7 +356,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         const SizedBox(height: 4),
         RichText(
           text: TextSpan(
-            style: const TextStyle(color: Colors.black),
+            style: TextStyle(color: context.textColor),
             children: [
               TextSpan(text: value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
               TextSpan(text: ' $unit', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
@@ -385,7 +385,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -407,7 +407,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           _mealRow('점심', day.lunch),
           _mealRow('저녁', day.dinner),
           const SizedBox(height: 12),
-          const Divider(height: 1, color: Color(0xFFE5E7EB)),
+          Divider(height: 1, color: context.borderColor),
           const SizedBox(height: 12),
           Row(
             children: [
