@@ -283,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // 다크/라이트/시스템 모드 토글. 마이페이지 알림 설정 아래.
+  // 라이트/다크 모드 토글. 마이페이지 알림 설정 아래.
   Widget _themeModeSection() {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: ThemeModePref.notifier,
@@ -308,8 +308,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _themeChip('시스템', ThemeMode.system, current),
-                  const SizedBox(width: 8),
                   _themeChip('라이트', ThemeMode.light, current),
                   const SizedBox(width: 8),
                   _themeChip('다크', ThemeMode.dark, current),
@@ -853,23 +851,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '맞춤 레시피',
                   Icons.restaurant_menu,
-                  Colors.black,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: context.isDark
-                        ? const [Color(0xFFF2F3EE), Color(0xFFD8D9D2)]
-                        : const [_accentGreen, _accentGreenDeep],
-                  ),
-                  textColor: Colors.black,
+                  context.skyAccent,
+                  bgColor: context.cardBg,
+                  borderColor: context.borderColor,
+                  textColor: context.textColor,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecipesScreen())),
                 ),
                 _featureCard(
                   '식단 계획',
                   Icons.calendar_month,
-                  const Color(0xFF2563EB),
-                  bgColor: context.isDark ? const Color(0xFF172554) : const Color(0xFFEFF6FF),
-                  borderColor: context.isDark ? const Color(0xFF1E3A8A) : const Color(0xFFBFDBFE),
+                  context.skyAccent,
+                  bgColor: context.cardBg,
+                  borderColor: context.borderColor,
+                  textColor: context.textColor,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const MealPlanScreen()),
                   ),
@@ -877,17 +871,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '소비 우선순위',
                   Icons.trending_up,
-                  const Color(0xFFEA580C),
-                  bgColor: context.isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED),
-                  borderColor: context.isDark ? const Color(0xFF9A3412) : const Color(0xFFFED7AA),
+                  context.skyAccent,
+                  bgColor: context.cardBg,
+                  borderColor: context.borderColor,
+                  textColor: context.textColor,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PriorityScreen())),
                 ),
                 _featureCard(
                   '영양 분석',
                   Icons.favorite,
-                  const Color(0xFF16A34A),
-                  bgColor: context.isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
-                  borderColor: context.isDark ? const Color(0xFF166534) : const Color(0xFFBBF7D0),
+                  context.skyAccent,
+                  bgColor: context.cardBg,
+                  borderColor: context.borderColor,
+                  textColor: context.textColor,
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NutritionScreen())),
                 ),
               ],
