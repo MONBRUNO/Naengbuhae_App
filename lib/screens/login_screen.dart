@@ -27,6 +27,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _showPassword = false;
   bool _submitting = false;
+  // 이메일 미인증으로 로그인 거부된 사용자 안내 — 로그인 폼 위 배너로 노출
+  String? _pendingEmail;
+  bool _verificationSent = false;
+  bool _resending = false;
 
   @override
   void dispose() {
@@ -54,9 +58,16 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       final data = jsonDecode(res.body) as Map<String, dynamic>;
-      // 백엔드 LoginResponse: { success, message, token, refreshToken }
+      // 백엔드 LoginResponse: { success, message, token, refreshToken, needsEmailVerification, email }
       // success=false여도 HTTP 200으로 옴
       if (data['success'] != true) {
+        if (data['needsEmailVerification'] == true && data['email'] != null) {
+          setState(() {
+            _pendingEmail = data['email'].toString();
+            _verificationSent = false;
+          });
+          return;
+        }
         _showSnackBar(data['message']?.toString() ?? '아이디 또는 비밀번호를 확인해주세요.');
         return;
       }
@@ -91,6 +102,29 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  // 이메일 미인증 안내 배너의 "메일 다시 받기" 핸들러.
+  // username/password를 다시 보내 백엔드가 검증 + 재발송.
+  Future<void> _resendVerification() async {
+    if (_resending) return;
+    setState(() => _resending = true);
+    try {
+      final res = await ApiClient.post('/user/resend-verification-public', body: {
+        'username': _usernameController.text.trim(),
+        'password': _passwordController.text,
+      });
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      if (data['success'] == true) {
+        setState(() => _verificationSent = true);
+      } else {
+        _showSnackBar(data['message']?.toString() ?? '메일 재발송에 실패했습니다.');
+      }
+    } catch (_) {
+      _showSnackBar('서버 연결에 실패했습니다.');
+    } finally {
+      if (mounted) setState(() => _resending = false);
+    }
+  }
+
   void _showSnackBar(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -115,6 +149,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Text('신선한 식재료 관리의 시작',
                       style: TextStyle(fontSize: 14, color: Colors.grey)),
                   const SizedBox(height: 48),
+                  if (_pendingEmail != null) _verificationBanner(),
+                  if (_pendingEmail != null) const SizedBox(height: 16),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
@@ -137,6 +173,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(_submitting ? '로그인 중...' : '로그인'),
                   ),
                   const SizedBox(height: 12),
+                  // 비로그인 진입 — 회원가입만 있는 줄 알고 이탈하지 않도록 로그인 버튼 바로 아래에 배치
+                  Center(
+                    child: TextButton(
+                      onPressed: _startAsGuest,
+                      child: const Text(
+                        '로그인 없이 둘러보기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   // 비밀번호 잊은 사용자용 — 메일로 재설정 링크 받기
                   Center(
                     child: GestureDetector(
@@ -193,26 +244,65 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
-                  // 비로그인 진입 — 로컬 식재료 관리만 사용. 가족 공유/알림/식단은 가입 후.
-                  Center(
-                    child: TextButton(
-                      onPressed: _startAsGuest,
-                      child: const Text(
-                        '로그인 없이 둘러보기',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6B7280),
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _verificationBanner() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEFCE8),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFFEF08A), width: 2),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: const BoxDecoration(color: Color(0xFFFACC15), shape: BoxShape.circle),
+            child: const Icon(Icons.mail_outline, color: Color(0xFF713F12), size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('이메일 인증을 완료해주세요',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF713F12))),
+                const SizedBox(height: 4),
+                Text(
+                  '${_pendingEmail!}로 보낸 인증 메일을 확인해주세요.',
+                  style: const TextStyle(fontSize: 12, color: Color(0xFF713F12), height: 1.4),
+                ),
+                const SizedBox(height: 8),
+                if (_verificationSent)
+                  const Text('✓ 인증 메일을 다시 보냈어요. 메일함을 확인해주세요.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF15803D), fontWeight: FontWeight.w600))
+                else
+                  GestureDetector(
+                    onTap: _resending ? null : _resendVerification,
+                    child: Text(
+                      _resending ? '전송 중...' : '메일 다시 받기',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF713F12),
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
