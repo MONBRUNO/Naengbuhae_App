@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../utils/theme_colors.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -375,7 +376,7 @@ class _SignupScreenState extends State<SignupScreen> {
               onTap: _pickBirthDate,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: context.cardBg, borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   children: [
                     Expanded(child: Text(_formatDate(_birthDate))),
@@ -485,7 +486,7 @@ class _SignupScreenState extends State<SignupScreen> {
   InputDecoration _inputDecoration(String? hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: context.cardBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(

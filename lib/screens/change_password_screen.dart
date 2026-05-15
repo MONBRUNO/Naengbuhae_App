@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../utils/theme_colors.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -143,7 +144,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   InputDecoration _inputDecoration(String? hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: context.cardBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
         focusedBorder: OutlineInputBorder(

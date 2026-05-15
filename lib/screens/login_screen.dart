@@ -8,6 +8,7 @@ import '../services/fcm_service.dart';
 import '../services/ingredient_migration.dart';
 import '../services/notification_service.dart';
 import '../state/guest_mode.dart';
+import '../utils/theme_colors.dart';
 import 'forgot_password_screen.dart';
 import 'main_scaffold.dart';
 import 'oauth_webview_screen.dart';
@@ -234,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: context.cardBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,

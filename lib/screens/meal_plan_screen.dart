@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../services/notification_service.dart';
 import '../utils/format.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/bar_chart.dart';
 import 'recipes_screen.dart';
 

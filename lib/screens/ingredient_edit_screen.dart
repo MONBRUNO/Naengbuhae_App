@@ -9,6 +9,7 @@ import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
 import '../utils/expiry_defaults.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/login_required.dart';
 import 'receipt_recognition_screen.dart';
 
@@ -565,7 +566,7 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
   InputDecoration _inputDecoration(String? hint) => InputDecoration(
         hintText: hint,
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: context.boxBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -588,7 +589,7 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: context.boxBg,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE5E7EB)),
         ),
