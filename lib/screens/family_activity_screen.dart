@@ -4,9 +4,20 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../state/fridge_context.dart';
+import '../widgets/donut_chart.dart';
 import '../widgets/fridge_selector.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
+
+// 도넛 차트 슬라이스 색깔 — TOP 항목 순서대로 할당.
+const _pieGreens = [
+  Color(0xFF16A34A), Color(0xFF22C55E), Color(0xFF4ADE80),
+  Color(0xFF86EFAC), Color(0xFFBBF7D0),
+];
+const _pieOranges = [
+  Color(0xFFEA580C), Color(0xFFF97316), Color(0xFFFB923C),
+  Color(0xFFFDBA74), Color(0xFFFED7AA),
+];
 
 // 가족 활동 통계 화면 — 현재 선택된 냉장고 기준으로 멤버별 추가/소비 카운트 + 자주 추가/비우는 식재료 TOP 5.
 class FamilyActivityScreen extends StatefulWidget {
@@ -150,8 +161,11 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         const SizedBox(height: 8),
         if (members.isEmpty)
           _emptyCard('아직 활동 기록이 없어요')
-        else
+        else ...[
+          _memberBarChart(members),
+          const SizedBox(height: 8),
           ...members.map(_memberRow),
+        ],
         const SizedBox(height: 20),
 
         // 자주 추가한 식재료 TOP
@@ -160,8 +174,11 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         const SizedBox(height: 8),
         if (topAdded.isEmpty)
           _emptyCard('아직 추가 기록이 없어요')
-        else
+        else ...[
+          _donutSection(topAdded, _pieGreens),
+          const SizedBox(height: 8),
           ..._rankedList(topAdded, const Color(0xFF16A34A)),
+        ],
         const SizedBox(height: 20),
 
         // 자주 비운 식재료 TOP
@@ -170,9 +187,161 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         const SizedBox(height: 8),
         if (topRemoved.isEmpty)
           _emptyCard('아직 비움 기록이 없어요')
-        else
+        else ...[
+          _donutSection(topRemoved, _pieOranges),
+          const SizedBox(height: 8),
           ..._rankedList(topRemoved, const Color(0xFFEA580C)),
+        ],
       ],
+    );
+  }
+
+  // 멤버별 추가/비움 그룹 막대 차트 — 한 멤버당 추가(녹색) + 비움(주황) 두 막대.
+  Widget _memberBarChart(List<Map<String, dynamic>> members) {
+    final maxValue = members.fold<int>(0, (m, e) {
+      final added = (e['added'] as int? ?? 0);
+      final removed = (e['removed'] as int? ?? 0);
+      return [added, removed, m].reduce((a, b) => a > b ? a : b);
+    });
+    final scale = maxValue == 0 ? 1.0 : maxValue.toDouble();
+    const chartHeight = 120.0;
+    const maxBarHeight = 80.0;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          // 범례
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: const [
+              _LegendDot(color: Color(0xFF16A34A), label: '추가'),
+              SizedBox(width: 12),
+              _LegendDot(color: Color(0xFFEA580C), label: '비움'),
+            ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: chartHeight,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: members.map((m) {
+                final added = m['added'] as int? ?? 0;
+                final removed = m['removed'] as int? ?? 0;
+                final name = (m['name']?.toString() ?? m['username']?.toString() ?? '').isEmpty
+                    ? '-'
+                    : (m['name']?.toString() ?? m['username']!.toString());
+                return Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _bar(added, scale, maxBarHeight, const Color(0xFF16A34A)),
+                          const SizedBox(width: 4),
+                          _bar(removed, scale, maxBarHeight, const Color(0xFFEA580C)),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF)),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _bar(int value, double scale, double maxH, Color color) {
+    final h = (maxH * value / scale).clamp(0.0, maxH);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('$value',
+            style: const TextStyle(fontSize: 10, color: Color(0xFF6B7280))),
+        const SizedBox(height: 2),
+        Container(
+          width: 16,
+          height: value == 0 ? 4 : h.clamp(6, maxH),
+          decoration: BoxDecoration(
+            color: value == 0 ? const Color(0xFFE5E7EB) : color,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(4),
+              topRight: Radius.circular(4),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // TOP N 항목을 도넛 + 색깔 범례로 시각화. 아래쪽 상세 리스트와 결합.
+  Widget _donutSection(List<Map<String, dynamic>> items, List<Color> palette) {
+    final segments = <DonutSegment>[];
+    for (var i = 0; i < items.length; i++) {
+      final count = (items[i]['count'] as num? ?? 0).toDouble();
+      segments.add(DonutSegment(count, palette[i % palette.length]));
+    }
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF9FAFB),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          DonutChart(segments: segments, size: 110),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(items.length, (i) {
+                final item = items[i];
+                final count = (item['count'] as num? ?? 0).toInt();
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 10, height: 10,
+                        decoration: BoxDecoration(
+                          color: palette[i % palette.length],
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(item['name']?.toString() ?? '',
+                            maxLines: 1, overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
+                      ),
+                      Text('$count회',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -316,6 +485,27 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         child: Text(text,
             style: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 13)),
       ),
+    );
+  }
+}
+
+class _LegendDot extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _LegendDot({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 10, height: 10,
+          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+      ],
     );
   }
 }
