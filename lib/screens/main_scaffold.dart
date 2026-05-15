@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 import '../api/api_client.dart';
+import '../api/ingredient_repo.dart';
 import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
 import '../state/tab_index.dart';
@@ -45,7 +46,7 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   Future<void> _prefetchForNotifications() async {
     try {
-      final res = await ApiClient.get('/api/ingredients');
+      final res = await IngredientRepo.list();
       if (res.statusCode != 200) return;
       final items = (jsonDecode(utf8.decode(res.bodyBytes)) as List).cast<Map<String, dynamic>>();
       await NotificationService.rescheduleExpiryNotifications(items);

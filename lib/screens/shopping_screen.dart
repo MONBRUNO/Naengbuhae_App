@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../state/guest_mode.dart';
+import '../widgets/login_required.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 const _units = ['개', 'g', 'kg', 'ml', 'L', '팩'];
@@ -31,6 +33,11 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
   @override
   void initState() {
     super.initState();
+    // 장보기는 서버 기반(/api/shopping-list)이라 게스트는 안내 화면만 표시.
+    if (GuestMode.currentlyGuest) {
+      _loading = false;
+      return;
+    }
     _fetch();
   }
 
@@ -39,6 +46,32 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     _nameController.dispose();
     _quantityController.dispose();
     super.dispose();
+  }
+
+  Widget _buildGuestPlaceholder() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.shopping_cart_outlined, size: 56, color: Color(0xFFD1D5DB)),
+            const SizedBox(height: 16),
+            const Text('장보기 기능은 로그인 후 사용할 수 있어요',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            const Text('가족과 공유되는 장보기 목록은\n계정 데이터로 관리돼요.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280), height: 1.5)),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => LoginRequired.show(context, featureName: '장보기'),
+              child: const Text('로그인하기'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _fetch() async {
@@ -131,6 +164,9 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (GuestMode.currentlyGuest) {
+      return Scaffold(body: SafeArea(bottom: false, child: _buildGuestPlaceholder()));
+    }
     return Scaffold(
       body: SafeArea(bottom: false, child: _buildBody()),
     );

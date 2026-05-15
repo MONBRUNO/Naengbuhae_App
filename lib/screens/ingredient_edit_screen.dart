@@ -5,8 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../api/api_client.dart';
+import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
+import '../state/guest_mode.dart';
 import '../utils/expiry_defaults.dart';
+import '../widgets/login_required.dart';
 import 'receipt_recognition_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
@@ -140,8 +143,8 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
         body['fridgeId'] = FridgeContext.selectedId;
       }
       final res = _isEdit
-          ? await ApiClient.put('/api/ingredients/${widget.existing!['id']}', body: body)
-          : await ApiClient.post('/api/ingredients', body: body);
+          ? await IngredientRepo.update(widget.existing!['id'] as int, body)
+          : await IngredientRepo.add(body);
       if (res.statusCode == 200) {
         if (!mounted) return;
         Navigator.of(context).pop(true);
@@ -284,6 +287,10 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
             if (!_isEdit) ...[
               InkWell(
                 onTap: () async {
+                  if (GuestMode.currentlyGuest) {
+                    await LoginRequired.show(context, featureName: '영수증 인식');
+                    return;
+                  }
                   final added = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(builder: (_) => const ReceiptRecognitionScreen()),
                   );
@@ -312,8 +319,8 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
               const SizedBox(height: 12),
             ],
 
-            // 카메라 인식 영역. 추가 모드에서만 표시.
-            if (!_isEdit) ...[
+            // 카메라 인식 영역. 추가 모드에서만 표시. 게스트는 서버 AI를 못 쓰니까 숨김.
+            if (!_isEdit && !GuestMode.currentlyGuest) ...[
               InkWell(
                 onTap: _recognizing ? null : _pickImage,
                 borderRadius: BorderRadius.circular(12),

@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../api/api_client.dart';
+import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
+import '../state/guest_mode.dart';
+import '../widgets/login_required.dart';
 import '../utils/expiry.dart';
 import '../widgets/donut_chart.dart';
 import '../widgets/fridge_selector.dart';
@@ -50,11 +52,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _error = null;
     });
     try {
-      final fridgeId = FridgeContext.selectedId;
-      final path = fridgeId != null
-          ? '/api/ingredients?fridgeId=$fridgeId'
-          : '/api/ingredients';
-      final res = await ApiClient.get(path);
+      final res = await IngredientRepo.list(fridgeId: FridgeContext.selectedId);
       if (res.statusCode != 200) {
         setState(() => _error = '조회 실패 (${res.statusCode})');
         return;
@@ -256,11 +254,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       children: [
         Expanded(child: _featureCard('레시피 추천', LucideIcons.chefHat,
             const Color(0xFFFFF7ED), const Color(0xFFFED7AA), const Color(0xFFEA580C), () {
+          if (GuestMode.currentlyGuest) {
+            LoginRequired.show(context, featureName: '레시피 추천');
+            return;
+          }
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const RecipesScreen()));
         })),
         const SizedBox(width: 12),
         Expanded(child: _featureCard('식단 추천', LucideIcons.calendar,
             const Color(0xFFF0FDF4), const Color(0xFFBBF7D0), const Color(0xFF16A34A), () {
+          if (GuestMode.currentlyGuest) {
+            LoginRequired.show(context, featureName: '식단 추천');
+            return;
+          }
           Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MealPlanScreen()));
         })),
       ],

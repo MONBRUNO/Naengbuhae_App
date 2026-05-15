@@ -6,6 +6,7 @@ import 'screens/main_scaffold.dart';
 import 'services/fcm_service.dart';
 import 'services/notification_router.dart';
 import 'services/notification_service.dart';
+import 'state/guest_mode.dart';
 import 'state/notification_settings.dart';
 
 void main() async {
@@ -13,6 +14,8 @@ void main() async {
   // 알림 인프라 초기화 — 로컬은 무조건, FCM은 google-services.json이 있어야 동작
   await NotificationSettings.load();
   await NotificationService.init();
+  // 게스트 플래그 미리 로드 → _AuthGate가 동기적으로 판단 가능
+  await GuestMode.load();
   // FCM은 비차단으로 — 초기화 실패해도 로컬 알림은 계속 동작해야 함
   // ignore: unawaited_futures
   FcmService.init();
@@ -60,7 +63,8 @@ class NaengbuhaeApp extends StatelessWidget {
   }
 }
 
-// 시작 시 저장된 토큰 확인 후 라우팅. 웹의 sessionStorage/localStorage 분기 + isLoggedIn 체크와 같은 역할.
+// 시작 시 저장된 토큰 또는 게스트 플래그 확인 후 라우팅.
+// 토큰 있음 → 로그인 사용자, 토큰 없고 isGuest=true → 게스트, 둘 다 없음 → 로그인 화면.
 class _AuthGate extends StatelessWidget {
   const _AuthGate();
 
@@ -72,7 +76,9 @@ class _AuthGate extends StatelessWidget {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Scaffold(body: Center(child: CircularProgressIndicator()));
         }
-        return snapshot.data == true ? const MainScaffold() : const LoginScreen();
+        final hasToken = snapshot.data == true;
+        final isGuest = GuestMode.currentlyGuest;
+        return (hasToken || isGuest) ? const MainScaffold() : const LoginScreen();
       },
     );
   }

@@ -4,12 +4,21 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
+import 'guest_mode.dart';
 
 // 전역 냉장고 컨텍스트.
 // 어느 냉장고를 보고 있는지는 앱 전체에서 공유돼야 함 (홈/식재료/우선순위/추가 등 모두 같은 냉장고 기준).
 // ValueNotifier로 노출 → 화면들이 ValueListenableBuilder로 listen.
 class FridgeContext {
   static const _kSelectedFridgeIdKey = 'selected_fridge_id';
+
+  // 게스트 모드에서 쓰는 단일 가상 냉장고. fridgeId는 -1 (서버 id와 절대 충돌하지 않음).
+  static const Map<String, dynamic> _guestFridge = {
+    'id': -1,
+    'name': '내 냉장고',
+    'isOwner': true,
+    'members': [],
+  };
 
   // 내가 멤버인 냉장고 목록 (id, name, ownerUsername, isOwner, members 등)
   static final ValueNotifier<List<Map<String, dynamic>>> fridges =
@@ -23,6 +32,12 @@ class FridgeContext {
 
   // 앱 시작 시 한 번 호출 (로그인 후 MainScaffold initState 등).
   static Future<void> load() async {
+    // 게스트는 서버 호출 없이 가상 냉장고 1개만 들고 다닌다.
+    if (await GuestMode.isGuest()) {
+      fridges.value = [_guestFridge];
+      selected.value = _guestFridge;
+      return;
+    }
     try {
       final res = await ApiClient.get('/api/fridges');
       if (res.statusCode != 200) return;

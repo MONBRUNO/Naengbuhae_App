@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 
 import 'package:http/http.dart' as http;
 
+import '../state/guest_mode.dart';
 import 'auth_storage.dart';
 
 // 모든 인증 필요한 API 호출은 ApiClient를 통과시킨다.
@@ -104,12 +105,13 @@ class ApiClient {
 
     var res = await doRequest();
 
-    // 인증 실패: refresh 시도 → 성공 시 1회 재시도, 실패 시 로그아웃 신호
+    // 인증 실패: refresh 시도 → 성공 시 1회 재시도, 실패 시 로그아웃 신호.
+    // 게스트는 처음부터 토큰이 없으므로 401을 받아도 로그아웃으로 처리하지 않는다 (화면이 자체적으로 가드).
     if (res.statusCode == 401 || res.statusCode == 403) {
       final refreshed = await _refreshAccessToken();
       if (refreshed) {
         res = await doRequest();
-      } else {
+      } else if (!GuestMode.currentlyGuest) {
         await AuthStorage.clear();
         _onLoggedOut.add(null);
       }
@@ -147,7 +149,7 @@ class ApiClient {
       final refreshed = await _refreshAccessToken();
       if (refreshed) {
         res = await doRequest();
-      } else {
+      } else if (!GuestMode.currentlyGuest) {
         await AuthStorage.clear();
         _onLoggedOut.add(null);
       }

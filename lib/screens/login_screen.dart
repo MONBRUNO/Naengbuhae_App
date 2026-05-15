@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import '../api/api_client.dart';
 import '../api/auth_storage.dart';
 import '../services/fcm_service.dart';
+import '../services/ingredient_migration.dart';
 import '../services/notification_service.dart';
+import '../state/guest_mode.dart';
 import 'forgot_password_screen.dart';
 import 'main_scaffold.dart';
 import 'oauth_webview_screen.dart';
@@ -62,6 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
         accessToken: data['token'] as String,
         refreshToken: data['refreshToken'] as String,
       );
+      // 게스트 모드에서 진입한 경우 플래그 해제 + 로컬 식재료 마이그레이션 안내
+      await GuestMode.clear();
+      if (mounted) await IngredientMigration.promptAndMigrate(context);
       // 로그인 직후 알림 권한 요청 + FCM 토큰 등록. 실패해도 로그인 흐름은 진행.
       // ignore: unawaited_futures
       NotificationService.requestPermission();
@@ -76,6 +81,14 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  Future<void> _startAsGuest() async {
+    await GuestMode.setGuest();
+    if (!mounted) return;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const MainScaffold()),
+    );
   }
 
   void _showSnackBar(String message) {
@@ -180,6 +193,21 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 16),
+                  // 비로그인 진입 — 로컬 식재료 관리만 사용. 가족 공유/알림/식단은 가입 후.
+                  Center(
+                    child: TextButton(
+                      onPressed: _startAsGuest,
+                      child: const Text(
+                        '로그인 없이 둘러보기',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF6B7280),
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -254,6 +282,8 @@ class _LoginScreenState extends State<LoginScreen> {
       accessToken: result.accessToken,
       refreshToken: result.refreshToken,
     );
+    await GuestMode.clear();
+    if (mounted) await IngredientMigration.promptAndMigrate(context);
     // ignore: unawaited_futures
     NotificationService.requestPermission();
     // ignore: unawaited_futures

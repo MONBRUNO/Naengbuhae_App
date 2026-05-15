@@ -6,7 +6,9 @@ import '../api/api_client.dart';
 import '../api/auth_storage.dart';
 import '../services/fcm_service.dart';
 import '../state/fridge_context.dart';
+import '../state/guest_mode.dart';
 import '../utils/format.dart';
+import '../widgets/login_required.dart';
 import '../widgets/notification_settings_section.dart';
 import 'family_activity_screen.dart';
 import 'fridge_management_screen.dart';
@@ -17,6 +19,7 @@ import 'nutrition_screen.dart';
 import 'priority_screen.dart';
 import 'profile_edit_screen.dart';
 import 'recipes_screen.dart';
+import 'signup_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 const _accentGreenDeep = Color(0xFFB8E600);
@@ -38,6 +41,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    // 게스트는 서버 호출 없이 안내 화면만 표시한다.
+    if (GuestMode.currentlyGuest) return;
     _fetch();
     _fetchUnreadCount();
   }
@@ -176,8 +181,151 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (GuestMode.currentlyGuest) {
+      return Scaffold(body: SafeArea(bottom: false, child: _buildGuestBody()));
+    }
     return Scaffold(
       body: SafeArea(bottom: false, child: _buildBody()),
+    );
+  }
+
+  Widget _buildGuestBody() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+      children: [
+        const Text('나의 맞춤', style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 4),
+        const Text('지금은 비로그인 상태예요',
+            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+        const SizedBox(height: 20),
+
+        // 가입/로그인 CTA 카드
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [_accentGreen, _accentGreenDeep],
+            ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('로그인하면 더 많은 기능을 사용할 수 있어요',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              const Text(
+                '가족과 냉장고 공유 / 식단 추천 / 알림 등\n지금 추가한 식재료는 로그인하면 그대로 옮겨드려요.',
+                style: TextStyle(fontSize: 12, height: 1.5, color: Color(0xFF1F2937)),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SignupScreen()),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: const Text('회원가입', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        side: BorderSide.none,
+                      ),
+                      child: const Text('로그인', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 24),
+        const Text('잠금 기능', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+        const SizedBox(height: 8),
+        _guestLockedTile(Icons.notifications_none, '알림 센터', '받은 알림 내역'),
+        _guestLockedTile(Icons.kitchen_outlined, '냉장고 관리', '가족 공유, 초대 코드'),
+        _guestLockedTile(Icons.insights, '가족 활동', '멤버별 추가/소비 통계'),
+        _guestLockedTile(Icons.calendar_month, '식단 계획', '맞춤 식단 추천'),
+        _guestLockedTile(Icons.restaurant_menu, '맞춤 레시피', '내 식재료 기반 추천'),
+        _guestLockedTile(Icons.favorite, '영양 분석', '권장 칼로리 + 영양 비율'),
+
+        const SizedBox(height: 24),
+        // 게스트 모드 종료 — 로컬 식재료는 유지하고 로그인 화면으로
+        Center(
+          child: TextButton(
+            onPressed: () => LoginRequired.exitGuest(context),
+            child: const Text(
+              '비로그인 모드 종료',
+              style: TextStyle(
+                fontSize: 13,
+                color: Color(0xFF6B7280),
+                decoration: TextDecoration.underline,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _guestLockedTile(IconData icon, String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: InkWell(
+        onTap: () => LoginRequired.show(context, featureName: title),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9FAFB),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                child: Icon(icon, color: const Color(0xFF9CA3AF), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                  ],
+                ),
+              ),
+              const Icon(Icons.lock_outline, size: 16, color: Color(0xFF9CA3AF)),
+            ],
+          ),
+        ),
+      ),
     );
   }
 

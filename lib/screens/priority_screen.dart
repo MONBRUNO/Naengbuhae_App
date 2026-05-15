@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../api/api_client.dart';
+import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
 import '../utils/expiry.dart';
 import '../widgets/bar_chart.dart';
@@ -40,11 +40,7 @@ class _PriorityScreenState extends State<PriorityScreen> {
       _error = null;
     });
     try {
-      final fridgeId = FridgeContext.selectedId;
-      final path = fridgeId != null
-          ? '/api/ingredients?fridgeId=$fridgeId'
-          : '/api/ingredients';
-      final res = await ApiClient.get(path);
+      final res = await IngredientRepo.list(fridgeId: FridgeContext.selectedId);
       if (res.statusCode != 200) {
         setState(() => _error = '조회 실패 (${res.statusCode})');
         return;
@@ -70,7 +66,7 @@ class _PriorityScreenState extends State<PriorityScreen> {
       ),
     );
     if (ok != true) return;
-    final res = await ApiClient.delete('/api/ingredients/${item['id']}');
+    final res = await IngredientRepo.delete(item['id'] as int);
     if (res.statusCode == 200) _fetch();
   }
 

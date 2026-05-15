@@ -2,11 +2,13 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
-import '../api/api_client.dart';
+import '../api/ingredient_repo.dart';
 import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
+import '../state/guest_mode.dart';
 import '../utils/expiry.dart';
 import '../widgets/fridge_selector.dart';
+import '../widgets/login_required.dart';
 import 'ingredient_edit_screen.dart';
 import 'nutrition_screen.dart';
 
@@ -58,11 +60,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       _error = null;
     });
     try {
-      final fridgeId = FridgeContext.selectedId;
-      final path = fridgeId != null
-          ? '/api/ingredients?fridgeId=$fridgeId'
-          : '/api/ingredients';
-      final res = await ApiClient.get(path);
+      final res = await IngredientRepo.list(fridgeId: FridgeContext.selectedId);
       if (res.statusCode != 200) {
         setState(() => _error = '조회 실패 (${res.statusCode})');
         return;
@@ -93,7 +91,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
       ),
     );
     if (ok != true) return;
-    final res = await ApiClient.delete('/api/ingredients/${item['id']}');
+    final res = await IngredientRepo.delete(item['id'] as int);
     if (res.statusCode == 200) {
       _fetch();
     } else if (mounted) {
@@ -210,9 +208,15 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             child: SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const NutritionScreen()),
-                ),
+                onPressed: () {
+                  if (GuestMode.currentlyGuest) {
+                    LoginRequired.show(context, featureName: '영양 분석');
+                    return;
+                  }
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const NutritionScreen()),
+                  );
+                },
                 style: OutlinedButton.styleFrom(
                   backgroundColor: const Color(0xFFF0FDF4),
                   foregroundColor: const Color(0xFF15803D),
