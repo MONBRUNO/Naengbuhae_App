@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../state/fridge_context.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/donut_chart.dart';
 import '../widgets/fridge_selector.dart';
 
@@ -210,7 +211,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -301,7 +302,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -386,7 +387,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -432,7 +433,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: context.boxBg,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -478,7 +479,7 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF9FAFB),
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../services/notification_router.dart';
+import '../utils/theme_colors.dart';
 
 // 인앱 알림 센터 — 받은 알림 히스토리.
 // 진입 시 자동으로 read-all 호출 (사용자가 봤다고 간주).
@@ -105,7 +106,9 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isRead ? const Color(0xFFF9FAFB) : const Color(0xFFF7FEE7),
+          color: isRead
+              ? context.boxBg
+              : (context.isDark ? const Color(0xFF365314) : const Color(0xFFF7FEE7)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isRead ? const Color(0xFFE5E7EB) : const Color(0xFFD9F99D),

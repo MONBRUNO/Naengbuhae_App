@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../utils/theme_colors.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -70,7 +71,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: context.boxBg,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
@@ -199,7 +200,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               margin: const EdgeInsets.only(bottom: 6),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -260,7 +261,7 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFF5F5F5),
+                color: context.cardBg,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Wrap(
