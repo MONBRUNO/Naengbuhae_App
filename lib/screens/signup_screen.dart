@@ -163,7 +163,8 @@ class _SignupScreenState extends State<SignupScreen> {
       if (success) {
         _snack(message ?? '회원가입 성공! 로그인해주세요.');
         if (!mounted) return;
-        Navigator.of(context).pop();
+        // 가입한 username을 LoginScreen에 넘겨 자동으로 채워준다.
+        Navigator.of(context).pop<String>(_username.text.trim());
       } else {
         _snack(message ?? '회원가입에 실패했습니다.');
       }

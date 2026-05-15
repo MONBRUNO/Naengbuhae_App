@@ -230,10 +230,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       const Text('아직 회원이 아니신가요? ',
                           style: TextStyle(color: Colors.grey)),
                       GestureDetector(
-                        onTap: () {
-                          Navigator.of(context).push(
+                        onTap: () async {
+                          // 가입 성공 시 username을 받아서 자동으로 채워준다.
+                          final newUsername = await Navigator.of(context).push<String>(
                             MaterialPageRoute(builder: (_) => const SignupScreen()),
                           );
+                          if (!mounted || newUsername == null || newUsername.isEmpty) return;
+                          setState(() => _usernameController.text = newUsername);
                         },
                         child: const Text('회원가입',
                             style: TextStyle(
