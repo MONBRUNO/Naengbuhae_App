@@ -505,8 +505,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                     _unit = '개';
                   }),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE5E7EB),
-                    foregroundColor: Colors.black,
+                    backgroundColor: context.cardBg,
+                    foregroundColor: context.textColor,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
