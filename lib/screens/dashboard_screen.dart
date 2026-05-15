@@ -7,6 +7,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/login_required.dart';
 import '../utils/expiry.dart';
 import '../widgets/donut_chart.dart';
@@ -343,7 +344,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

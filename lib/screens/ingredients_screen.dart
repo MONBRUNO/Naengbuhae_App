@@ -7,6 +7,7 @@ import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
 import '../utils/expiry.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/fridge_selector.dart';
 import '../widgets/login_required.dart';
 import 'ingredient_edit_screen.dart';
@@ -383,7 +384,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                         },
                       ),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                fillColor: context.cardBg,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
                 isDense: true,
                 border: OutlineInputBorder(
@@ -519,7 +520,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
   InputDecoration _filterDecoration() => InputDecoration(
         filled: true,
-        fillColor: const Color(0xFFF5F5F5),
+        fillColor: context.cardBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
         isDense: true,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
@@ -549,8 +550,8 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _selectionMode && isSelected
-              ? const Color(0xFFECFCCB) // 선택된 카드 = 연두 배경
-              : const Color(0xFFF5F5F5),
+              ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB)) // 선택된 카드 = 연두
+              : context.cardBg,
           borderRadius: BorderRadius.circular(12),
           border: _selectionMode && isSelected
               ? Border.all(color: _accentGreen, width: 2)
