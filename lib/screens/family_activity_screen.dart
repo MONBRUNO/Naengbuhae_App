@@ -116,13 +116,15 @@ class _FamilyActivityScreenState extends State<FamilyActivityScreen> {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [Color(0xFFF7FEE7), Color(0xFFFEFCE8)],
+              colors: context.isDark
+                  ? const [Color(0xFF365314), Color(0xFF422006)]
+                  : const [Color(0xFFF7FEE7), Color(0xFFFEFCE8)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFD9F99D)),
+            border: Border.all(color: context.isDark ? const Color(0xFF4D7C0F) : const Color(0xFFD9F99D)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

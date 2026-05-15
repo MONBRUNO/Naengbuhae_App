@@ -184,9 +184,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
+                color: context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFFECACA)),
+                border: Border.all(color: context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +237,10 @@ class _NutritionScreenState extends State<NutritionScreen> {
                     runSpacing: 6,
                     children: allergyList.map((a) => Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                      decoration: BoxDecoration(
+                        color: context.isDark ? const Color(0xFF374151) : Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
                       child: Text(a, style: const TextStyle(fontSize: 12)),
                     )).toList(),
                   ),

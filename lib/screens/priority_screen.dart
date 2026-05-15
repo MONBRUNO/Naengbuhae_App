@@ -162,16 +162,19 @@ class _PriorityScreenState extends State<PriorityScreen> {
     final dColor = statusColor(ExpiryStatus.danger);
     final wColor = statusColor(ExpiryStatus.warning);
     final sColor = statusColor(ExpiryStatus.safe);
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFAF5FF), Color(0xFFFDF2F8)],
+          colors: isDark
+              ? const [Color(0xFF3B0764), Color(0xFF500724)]
+              : const [Color(0xFFFAF5FF), Color(0xFFFDF2F8)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE9D5FF)),
+        border: Border.all(color: isDark ? const Color(0xFF6B21A8) : const Color(0xFFE9D5FF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,11 +221,14 @@ class _PriorityScreenState extends State<PriorityScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _statBox(d, total, '위험', dColor, const Color(0xFFFEF2F2)),
+                    _statBox(d, total, '위험', dColor,
+                        isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2)),
                     const SizedBox(height: 8),
-                    _statBox(w, total, '주의', wColor, const Color(0xFFFEFCE8)),
+                    _statBox(w, total, '주의', wColor,
+                        isDark ? const Color(0xFF422006) : const Color(0xFFFEFCE8)),
                     const SizedBox(height: 8),
-                    _statBox(s, total, '안전', sColor, const Color(0xFFF0FDF4)),
+                    _statBox(s, total, '안전', sColor,
+                        isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4)),
                   ],
                 ),
               ),
@@ -262,12 +268,13 @@ class _PriorityScreenState extends State<PriorityScreen> {
         : warning > 0
             ? '주의: $warning개 식재료 곧 소비 필요'
             : '안전: 모든 식재료가 양호합니다';
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFECACA)),
+        border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,

@@ -278,7 +278,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF0FDF4),
+                      color: context.isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Row(

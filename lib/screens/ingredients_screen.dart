@@ -334,11 +334,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                         );
                       },
                       style: OutlinedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF0FDF4),
-                        foregroundColor: const Color(0xFF15803D),
+                        backgroundColor: context.isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
+                        foregroundColor: context.isDark ? const Color(0xFF86EFAC) : const Color(0xFF15803D),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        side: const BorderSide(color: Color(0xFFBBF7D0), width: 2),
+                        side: BorderSide(color: context.isDark ? const Color(0xFF166534) : const Color(0xFFBBF7D0), width: 2),
                         textStyle: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       icon: const Icon(Icons.auto_awesome, size: 18),
@@ -466,10 +466,14 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: _showExpiredOnly ? const Color(0xFFFEE2E2) : const Color(0xFFF5F5F5),
+                  color: _showExpiredOnly
+                      ? (context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEE2E2))
+                      : context.cardBg,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: _showExpiredOnly ? const Color(0xFFFCA5A5) : Colors.transparent,
+                    color: _showExpiredOnly
+                        ? (context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFCA5A5))
+                        : Colors.transparent,
                   ),
                 ),
                 child: Row(

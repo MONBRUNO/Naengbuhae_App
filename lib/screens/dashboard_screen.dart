@@ -153,16 +153,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (safe > 0) DonutSegment(safe.toDouble(), statusColor(ExpiryStatus.safe)),
     ];
 
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFAF5FF), Color(0xFFFDF2F8)], // purple-50 → pink-50
+          colors: isDark
+              ? const [Color(0xFF3B0764), Color(0xFF500724)] // purple-950, pink-950
+              : const [Color(0xFFFAF5FF), Color(0xFFFDF2F8)], // purple-50 → pink-50
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE9D5FF)), // purple-100
+        border: Border.all(color: isDark ? const Color(0xFF6B21A8) : const Color(0xFFE9D5FF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -192,9 +195,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    if (danger > 0) _statusRow(danger, ExpiryStatus.danger, const Color(0xFFFEF2F2)),
-                    if (warning > 0) _statusRow(warning, ExpiryStatus.warning, const Color(0xFFFEFCE8)),
-                    if (safe > 0) _statusRow(safe, ExpiryStatus.safe, const Color(0xFFF0FDF4)),
+                    if (danger > 0) _statusRow(danger, ExpiryStatus.danger,
+                        isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2)),
+                    if (warning > 0) _statusRow(warning, ExpiryStatus.warning,
+                        isDark ? const Color(0xFF422006) : const Color(0xFFFEFCE8)),
+                    if (safe > 0) _statusRow(safe, ExpiryStatus.safe,
+                        isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4)),
                   ],
                 ),
               ),
@@ -251,10 +257,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _featureGrid() {
+    final isDark = context.isDark;
     return Row(
       children: [
         Expanded(child: _featureCard('레시피 추천', LucideIcons.chefHat,
-            const Color(0xFFFFF7ED), const Color(0xFFFED7AA), const Color(0xFFEA580C), () {
+            isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED),
+            isDark ? const Color(0xFF9A3412) : const Color(0xFFFED7AA),
+            const Color(0xFFEA580C), () {
           if (GuestMode.currentlyGuest) {
             LoginRequired.show(context, featureName: '레시피 추천');
             return;
@@ -263,7 +272,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         })),
         const SizedBox(width: 12),
         Expanded(child: _featureCard('식단 추천', LucideIcons.calendar,
-            const Color(0xFFF0FDF4), const Color(0xFFBBF7D0), const Color(0xFF16A34A), () {
+            isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
+            isDark ? const Color(0xFF166534) : const Color(0xFFBBF7D0),
+            const Color(0xFF16A34A), () {
           if (GuestMode.currentlyGuest) {
             LoginRequired.show(context, featureName: '식단 추천');
             return;
@@ -301,12 +312,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final msg = danger > 0
         ? '유통기한이 지난 식재료가 $danger개 있어요'
         : '유통기한이 임박한 식재료가 $warning개 있어요';
+    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFFEF2F2),
+        color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFECACA)),
+        border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,

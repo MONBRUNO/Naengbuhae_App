@@ -804,9 +804,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
+                  color: context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFFECACA), width: 2),
+                  border: Border.all(color: context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA), width: 2),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -860,8 +860,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   '식단 계획',
                   Icons.calendar_month,
                   const Color(0xFF2563EB),
-                  bgColor: const Color(0xFFEFF6FF),
-                  borderColor: const Color(0xFFBFDBFE),
+                  bgColor: context.isDark ? const Color(0xFF172554) : const Color(0xFFEFF6FF),
+                  borderColor: context.isDark ? const Color(0xFF1E3A8A) : const Color(0xFFBFDBFE),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const MealPlanScreen()),
                   ),
@@ -870,16 +870,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   '소비 우선순위',
                   Icons.trending_up,
                   const Color(0xFFEA580C),
-                  bgColor: const Color(0xFFFFF7ED),
-                  borderColor: const Color(0xFFFED7AA),
+                  bgColor: context.isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED),
+                  borderColor: context.isDark ? const Color(0xFF9A3412) : const Color(0xFFFED7AA),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const PriorityScreen())),
                 ),
                 _featureCard(
                   '영양 분석',
                   Icons.favorite,
                   const Color(0xFF16A34A),
-                  bgColor: const Color(0xFFF0FDF4),
-                  borderColor: const Color(0xFFBBF7D0),
+                  bgColor: context.isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
+                  borderColor: context.isDark ? const Color(0xFF166534) : const Color(0xFFBBF7D0),
                   onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NutritionScreen())),
                 ),
               ],

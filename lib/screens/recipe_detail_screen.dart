@@ -176,9 +176,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEF2F2),
+                color: context.isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFFECACA)),
+                border: Border.all(color: context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
               ),
               child: Row(
                 children: [
