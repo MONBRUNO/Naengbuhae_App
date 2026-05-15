@@ -530,7 +530,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: isDark
-              ? const [Color(0xFF365314), Color(0xFF1F2937)]
+              ? const [Color(0xFF1E2A1A), Color(0xFF191C20)]
               : const [Color(0xFFF7FEE7), Colors.white],
         ),
         borderRadius: BorderRadius.circular(14),

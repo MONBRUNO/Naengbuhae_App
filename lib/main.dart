@@ -63,26 +63,29 @@ class NaengbuhaeApp extends StatelessWidget {
             ),
           ),
         ),
-        // 다크 테마 — Material 3 ColorScheme.fromSeed로 자동 생성.
-        // 기존 화면에 하드코딩된 색(`Color(0xFFF5F5F5)` 등)은 그대로 라이트 톤을 유지하므로
-        // 시간이 지나면서 Theme.of(context).colorScheme 기반으로 점진적으로 이행 필요.
-        // 액센트는 형광 #CDFF00이 다크에서 너무 눈아파서 차분한 청록 #7BCAD5로.
+        // 다크 테마 — 웹(theme.css)의 디자인 외주 팔레트와 통일.
+        // warm-neutral 표면(#08090A 배경 / #191C20 카드), off-white primary CTA,
+        // sky(#8BCEEA) 소프트 액센트. 형광 라임은 라이트에서만.
         darkTheme: ThemeData(
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF7BCAD5),
+            seedColor: const Color(0xFF8BCEEA),
             brightness: Brightness.dark,
+          ).copyWith(
+            surface: const Color(0xFF191C20),
+            primary: const Color(0xFFF2F3EE),
+            onPrimary: const Color(0xFF0A0B0A),
           ),
-          scaffoldBackgroundColor: const Color(0xFF111827),
+          scaffoldBackgroundColor: const Color(0xFF08090A),
           appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF111827),
-            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF08090A),
+            foregroundColor: Color(0xFFF2F3EE),
             elevation: 0,
           ),
           elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF7BCAD5),
-              foregroundColor: Colors.black,
+              backgroundColor: const Color(0xFFF2F3EE),
+              foregroundColor: const Color(0xFF0A0B0A),
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               textStyle: const TextStyle(fontWeight: FontWeight.w600),

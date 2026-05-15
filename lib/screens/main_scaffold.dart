@@ -105,9 +105,9 @@ class _BottomNav extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        color: isDark ? const Color(0xFF0F1114) : Colors.white,
         border: Border(top: BorderSide(
-          color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
+          color: isDark ? const Color(0xFF2A2E33) : const Color(0xFFE5E7EB),
         )),
       ),
       child: SafeArea(

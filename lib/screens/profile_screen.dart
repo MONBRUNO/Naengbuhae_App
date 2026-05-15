@@ -200,7 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: context.isDark
-                  ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
+                  ? const [Color(0xFFF2F3EE), Color(0xFFD8D9D2)]
                   : const [_accentGreen, _accentGreenDeep],
             ),
             borderRadius: BorderRadius.circular(16),
@@ -484,7 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: context.isDark
-                          ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
+                          ? const [Color(0xFFF2F3EE), Color(0xFFD8D9D2)]
                           : const [_accentGreen, _accentGreenDeep],
                     ),
                     borderRadius: BorderRadius.circular(16),
@@ -530,7 +530,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: context.isDark
-                      ? const [Color(0xFF111827), Color(0xFF1F2937)]
+                      ? const [Color(0xFF191C20), Color(0xFF23272D)]
                       : const [Color(0xFFF9FAFB), Colors.white],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -858,7 +858,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: context.isDark
-                        ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
+                        ? const [Color(0xFFF2F3EE), Color(0xFFD8D9D2)]
                         : const [_accentGreen, _accentGreenDeep],
                   ),
                   textColor: Colors.black,

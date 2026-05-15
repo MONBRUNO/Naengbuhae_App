@@ -1,43 +1,50 @@
 import 'package:flutter/material.dart';
 
 // 다크 모드 분기용 헬퍼. 화면 코드에서 `context.cardBg` 같이 호출.
-// Material 3 colorScheme로 다 가는 게 이상적이지만 기존 색이 명시적으로 박혀있어
-// 점진적 이행 단계에서 라이트/다크 두 값을 분기.
+// 웹(theme.css)의 디자인 외주 토큰과 동일한 팔레트 — warm-neutral 다크,
+// off-white primary CTA, sky 액센트. 라이트는 브랜드 라임 유지.
 extension ThemeColorsContext on BuildContext {
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
 
-  // 카드 배경 (Color(0xFFF5F5F5) 대체)
-  Color get cardBg => isDark ? const Color(0xFF1F2937) : const Color(0xFFF5F5F5);
+  // 카드 표면 (웹 --card #191C20)
+  Color get cardBg => isDark ? const Color(0xFF191C20) : const Color(0xFFF5F5F5);
 
-  // 더 옅은 박스 (Color(0xFFF9FAFB) 대체)
-  Color get boxBg => isDark ? const Color(0xFF111827) : const Color(0xFFF9FAFB);
+  // 더 옅은/배경 박스 (웹 --background #08090A)
+  Color get boxBg => isDark ? const Color(0xFF08090A) : const Color(0xFFF9FAFB);
 
-  // 흰 박스 (Colors.white 대체) — 카드 안 카드 같은 경우
-  Color get surfaceBg => isDark ? const Color(0xFF374151) : Colors.white;
+  // 떠 있는 표면 / 카드 안 카드 (웹 --secondary #23272D)
+  Color get surfaceBg => isDark ? const Color(0xFF23272D) : Colors.white;
 
-  // 보더 (Color(0xFFE5E7EB) 대체)
-  Color get borderColor => isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB);
+  // 보더 (웹 --border rgba(255,255,255,0.05) ≈ 표면 위 옅은 선)
+  Color get borderColor => isDark ? const Color(0xFF2A2E33) : const Color(0xFFE5E7EB);
 
-  // 옅은 보더 (Color(0xFFF3F4F6) 대체)
-  Color get lightBorderColor => isDark ? const Color(0xFF1F2937) : const Color(0xFFF3F4F6);
+  // 옅은 보더
+  Color get lightBorderColor => isDark ? const Color(0xFF1F2227) : const Color(0xFFF3F4F6);
 
-  // 메인 텍스트 (Colors.black 대체)
-  Color get textColor => isDark ? Colors.white : Colors.black;
+  // 메인 텍스트 (웹 --foreground #F2F3EE)
+  Color get textColor => isDark ? const Color(0xFFF2F3EE) : Colors.black;
 
-  // 보조 텍스트 (Color(0xFF6B7280) 대체) — 다크에서도 잘 보이도록 조금 밝게
-  Color get subTextColor => isDark ? const Color(0xFFD1D5DB) : const Color(0xFF6B7280);
+  // 보조 텍스트 (웹 --muted-foreground rgba(242,243,238,0.62))
+  Color get subTextColor => isDark ? const Color(0x9EF2F3EE) : const Color(0xFF6B7280);
 
-  // 더 옅은 텍스트 (Color(0xFF9CA3AF) 대체)
-  Color get hintTextColor => isDark ? const Color(0xFF9CA3AF) : const Color(0xFF9CA3AF);
+  // 더 옅은 텍스트
+  Color get hintTextColor => isDark ? const Color(0x73F2F3EE) : const Color(0xFF9CA3AF);
 
-  // 브랜드 액센트 (식재료 추가하기 같은 primary 버튼 배경)
-  // 라이트: #CDFF00 형광 라임 (브랜드)
-  // 다크: 형광 라임이 너무 눈아파서 차분한 청록(#7BCAD5)으로 — 어두운 배경에 잘 어울림
-  Color get accentColor => isDark ? const Color(0xFF7BCAD5) : const Color(0xFFCDFF00);
+  // primary CTA 배경 (식재료 추가하기 등)
+  // 라이트: #CDFF00 형광 라임 (브랜드) / 다크: off-white #F2F3EE (네온 제거, 외주 디자인)
+  Color get accentColor => isDark ? const Color(0xFFF2F3EE) : const Color(0xFFCDFF00);
 
-  // 액센트 그라데이션 깊은 쪽 (라이트=라임 딥, 다크=청록 딥)
-  Color get accentDeep => isDark ? const Color(0xFF5EAFBE) : const Color(0xFFB8E600);
+  // primary 그라데이션 깊은 쪽
+  Color get accentDeep => isDark ? const Color(0xFFD8D9D2) : const Color(0xFFB8E600);
 
-  // 액센트 위 글자 (둘 다 검정 — 라임/밝은 청록 배경에서 검정이 가독성 최고)
-  Color get onAccent => Colors.black;
+  // primary 위 글자 (라이트=라임 위 검정 / 다크=off-white 위 진한색)
+  Color get onAccent => isDark ? const Color(0xFF0A0B0A) : Colors.black;
+
+  // sky 소프트 액센트 (AI/추천 아이콘·진행바 전용 — 웹 --accent #8BCEEA)
+  Color get skyAccent => isDark ? const Color(0xFF8BCEEA) : const Color(0xFF2563EB);
+
+  // 상태색 (웹 --status-* 다크 튜닝값과 통일)
+  Color get statusDanger => isDark ? const Color(0xFFFF5A5F) : const Color(0xFFFF3B30);
+  Color get statusWarning => isDark ? const Color(0xFFF5C44A) : const Color(0xFFFFD60A);
+  Color get statusSafe => isDark ? const Color(0xFF34D97A) : const Color(0xFF34C759);
 }

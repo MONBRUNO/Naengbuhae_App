@@ -102,7 +102,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: context.isDark
-                    ? const [Color(0xFF7BCAD5), Color(0xFF5EAFBE)]
+                    ? const [Color(0xFFF2F3EE), Color(0xFFD8D9D2)]
                     : const [Color(0xFFCDFF00), Color(0xFFB8E600)],
               ),
               borderRadius: BorderRadius.circular(16),
