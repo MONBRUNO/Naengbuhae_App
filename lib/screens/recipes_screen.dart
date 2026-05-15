@@ -101,8 +101,8 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
         title: const Text('레시피'),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Colors.black,
-          labelColor: Colors.black,
+          indicatorColor: context.textColor,
+          labelColor: context.textColor,
           unselectedLabelColor: Colors.grey,
           tabs: [
             const Tab(text: '전체'),
