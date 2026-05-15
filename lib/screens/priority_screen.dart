@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../api/ingredient_repo.dart';
 import '../state/fridge_context.dart';
 import '../utils/expiry.dart';
-import '../widgets/bar_chart.dart';
+import '../widgets/donut_chart.dart';
 import '../widgets/fridge_selector.dart';
 
 // 웹의 Priority.tsx에 대응. 상단 보라-핑크 카드 + 막대 그래프 + 위험도 요약 + 위험/주의/안전 섹션.
@@ -157,6 +157,10 @@ class _PriorityScreenState extends State<PriorityScreen> {
   }
 
   Widget _chartCard(int d, int w, int s) {
+    final total = d + w + s;
+    final dColor = statusColor(ExpiryStatus.danger);
+    final wColor = statusColor(ExpiryStatus.warning);
+    final sColor = statusColor(ExpiryStatus.safe);
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -182,22 +186,44 @@ class _PriorityScreenState extends State<PriorityScreen> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Expanded(
-                child: SimpleBarChart(items: [
-                  BarItem('위험', d, statusColor(ExpiryStatus.danger)),
-                  BarItem('주의', w, statusColor(ExpiryStatus.warning)),
-                  BarItem('안전', s, statusColor(ExpiryStatus.safe)),
-                ]),
+              // 도넛 차트 + 가운데 총 개수
+              SizedBox(
+                width: 130, height: 130,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    DonutChart(
+                      segments: [
+                        DonutSegment(d.toDouble(), dColor),
+                        DonutSegment(w.toDouble(), wColor),
+                        DonutSegment(s.toDouble(), sColor),
+                      ],
+                      size: 130,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('$total',
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                        const Text('개',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 12),
-              Column(
-                children: [
-                  _statBox(d, '위험', const Color(0xFFFEF2F2)),
-                  const SizedBox(height: 8),
-                  _statBox(w, '주의', const Color(0xFFFEFCE8)),
-                  const SizedBox(height: 8),
-                  _statBox(s, '안전', const Color(0xFFF0FDF4)),
-                ],
+              // 통계 요약 — 개수 + 비율 %
+              Expanded(
+                child: Column(
+                  children: [
+                    _statBox(d, total, '위험', dColor, const Color(0xFFFEF2F2)),
+                    const SizedBox(height: 8),
+                    _statBox(w, total, '주의', wColor, const Color(0xFFFEFCE8)),
+                    const SizedBox(height: 8),
+                    _statBox(s, total, '안전', sColor, const Color(0xFFF0FDF4)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -206,15 +232,24 @@ class _PriorityScreenState extends State<PriorityScreen> {
     );
   }
 
-  Widget _statBox(int count, String label, Color bg) {
+  Widget _statBox(int count, int total, String label, Color dotColor, Color bg) {
+    final pct = total == 0 ? 0 : (count * 100 / total).round();
     return Container(
-      width: 70,
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
-      child: Column(
+      child: Row(
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
-          Text('$count', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+          Container(
+            width: 8, height: 8,
+            decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+          const Spacer(),
+          Text('$count', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(width: 4),
+          Text('· $pct%',
+              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
         ],
       ),
     );
