@@ -21,12 +21,20 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   bool _loading = true;
   String? _error;
   List<Map<String, dynamic>> _all = [];
-  List<Map<String, dynamic>> _matches = [];
+  // 추천 API 원본 (이미 매칭률 내림차순 정렬). 만들수있는/즐겨찾기 탭은 이 위에서 필터.
+  List<Map<String, dynamic>> _recommended = [];
+
+  List<Map<String, dynamic>> get _matches => _recommended
+      .where((m) => ((m['hasIngredients'] as List?) ?? const []).isNotEmpty)
+      .toList();
+  List<Map<String, dynamic>> get _favorites => _recommended
+      .where((m) => (m['recipe'] is Map) && (m['recipe'] as Map)['favorite'] == true)
+      .toList();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _fetch();
   }
 
@@ -54,16 +62,34 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       final recs = (jsonDecode(utf8.decode(futures[1].bodyBytes)) as List).cast<Map<String, dynamic>>();
       setState(() {
         _all = all;
-        _matches = recs.where((m) {
-          final has = (m['hasIngredients'] as List?) ?? [];
-          return has.isNotEmpty;
-        }).toList()
+        _recommended = recs.toList()
           ..sort((a, b) => ((b['matchRate'] ?? 0) as num).compareTo((a['matchRate'] ?? 0) as num));
       });
     } catch (e) {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  // 즐겨찾기 토글 — 백엔드 응답으로 새 상태 받아 _recommended와 _all 모두 동기화.
+  Future<void> _toggleFavorite(int recipeId) async {
+    try {
+      final res = await ApiClient.post('/api/recipes/$recipeId/favorite/toggle');
+      if (res.statusCode != 200) return;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      final newState = data['favorite'] == true;
+      setState(() {
+        for (final m in _recommended) {
+          final r = m['recipe'];
+          if (r is Map && r['id'] == recipeId) r['favorite'] = newState;
+        }
+        for (final r in _all) {
+          if (r['id'] == recipeId) r['favorite'] = newState;
+        }
+      });
+    } catch (_) {
+      // 무시 — UX상 silent 실패
     }
   }
 
@@ -78,8 +104,9 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
           labelColor: Colors.black,
           unselectedLabelColor: Colors.grey,
           tabs: [
-            const Tab(text: '전체 레시피'),
+            const Tab(text: '전체'),
             Tab(text: '만들 수 있는 (${_matches.length})'),
+            Tab(text: '즐겨찾기 (${_favorites.length})'),
           ],
         ),
       ),
@@ -104,7 +131,32 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       children: [
         _allList(),
         _matchList(),
+        _favoriteList(),
       ],
+    );
+  }
+
+  Widget _favoriteList() {
+    final favs = _favorites;
+    if (favs.isEmpty) {
+      return const Center(child: Padding(
+        padding: EdgeInsets.all(24),
+        child: Text('즐겨찾기한 레시피가 없어요.\n레시피 카드의 하트를 눌러 저장해보세요.',
+            textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+      ));
+    }
+    return RefreshIndicator(
+      onRefresh: _fetch,
+      child: ListView.separated(
+        padding: const EdgeInsets.all(16),
+        itemCount: favs.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (_, i) {
+          final m = favs[i];
+          final recipe = (m['recipe'] as Map).cast<String, dynamic>();
+          return _recipeCard(recipe, m);
+        },
+      ),
     );
   }
 
@@ -122,7 +174,8 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   }
 
   Widget _matchList() {
-    if (_matches.isEmpty) {
+    final list = _matches;
+    if (list.isEmpty) {
       return const Center(child: Padding(
         padding: EdgeInsets.all(24),
         child: Text('만들 수 있는 요리가 없습니다.\n식재료를 추가하면 추천이 시작됩니다.',
@@ -133,10 +186,10 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       onRefresh: _fetch,
       child: ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: _matches.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        itemCount: list.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (_, i) {
-          final m = _matches[i];
+          final m = list[i];
           final recipe = (m['recipe'] as Map).cast<String, dynamic>();
           return _recipeCard(recipe, m);
         },
@@ -192,7 +245,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
                     ],
                   ),
                 ),
-                if (matchRate != null)
+                if (matchRate != null) ...[
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
@@ -202,6 +255,22 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
                     child: Text('$matchRate%',
                         style: TextStyle(color: matchColor, fontWeight: FontWeight.w700, fontSize: 14)),
                   ),
+                  const SizedBox(width: 4),
+                ],
+                // 하트 — 카드 탭과 분리 (InkWell의 자식 GestureDetector로 처리)
+                GestureDetector(
+                  onTap: () => _toggleFavorite(recipe['id'] as int),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      recipe['favorite'] == true ? Icons.favorite : Icons.favorite_border,
+                      color: recipe['favorite'] == true
+                          ? const Color(0xFFEF4444)
+                          : const Color(0xFF9CA3AF),
+                      size: 22,
+                    ),
+                  ),
+                ),
               ],
             ),
             if (warnings.isNotEmpty) ...[
