@@ -10,6 +10,7 @@ import '../state/guest_mode.dart';
 import '../state/theme_mode_pref.dart';
 import '../state/unread_notification_count.dart';
 import '../utils/format.dart';
+import '../utils/theme_colors.dart';
 import '../widgets/login_required.dart';
 import '../widgets/notification_settings_section.dart';
 import 'change_password_screen.dart';
@@ -362,7 +363,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFFF9FAFB),
+            color: context.boxBg,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -658,7 +659,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: context.boxBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -719,7 +720,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: context.boxBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -761,7 +762,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF9FAFB),
+                  color: context.boxBg,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -895,7 +896,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(16)),
+                decoration: BoxDecoration(color: context.boxBg, borderRadius: BorderRadius.circular(16)),
                 child: Column(
                   children: [
                     _ratioRow('탄수화물', '50-60%', 0.55, const Color(0xFF3B82F6)),
@@ -985,7 +986,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _healthGoalTile(IconData icon, Color iconColor, String label, String value) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: const Color(0xFFF9FAFB), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(color: context.boxBg, borderRadius: BorderRadius.circular(12)),
       child: Row(
         children: [
           Container(
