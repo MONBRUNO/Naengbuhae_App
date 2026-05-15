@@ -102,10 +102,13 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFE5E7EB))),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1F2937) : Colors.white,
+        border: Border(top: BorderSide(
+          color: isDark ? const Color(0xFF374151) : const Color(0xFFE5E7EB),
+        )),
       ),
       child: SafeArea(
         top: false,
@@ -115,7 +118,9 @@ class _BottomNav extends StatelessWidget {
             children: List.generate(_items.length, (i) {
               final (icon, label) = _items[i];
               final active = i == index;
-              final color = active ? Colors.black : const Color(0xFF9CA3AF);
+              final color = active
+                  ? (isDark ? Colors.white : Colors.black)
+                  : const Color(0xFF9CA3AF);
               return Expanded(
                 child: InkWell(
                   onTap: () => onChanged(i),
