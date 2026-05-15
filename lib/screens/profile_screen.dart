@@ -7,6 +7,7 @@ import '../api/auth_storage.dart';
 import '../services/fcm_service.dart';
 import '../state/fridge_context.dart';
 import '../state/guest_mode.dart';
+import '../state/unread_notification_count.dart';
 import '../utils/format.dart';
 import '../widgets/login_required.dart';
 import '../widgets/notification_settings_section.dart';
@@ -37,7 +38,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _loading = true;
   String? _error;
   Map<String, dynamic>? _profile;
-  int _unreadCount = 0;
 
   @override
   void initState() {
@@ -45,19 +45,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // 게스트는 서버 호출 없이 안내 화면만 표시한다.
     if (GuestMode.currentlyGuest) return;
     _fetch();
-    _fetchUnreadCount();
-  }
-
-  Future<void> _fetchUnreadCount() async {
-    try {
-      final res = await ApiClient.get('/api/notifications/unread-count');
-      if (res.statusCode != 200) return;
-      final data = jsonDecode(res.body) as Map<String, dynamic>;
-      final count = data['count'];
-      if (mounted) setState(() => _unreadCount = count is num ? count.toInt() : 0);
-    } catch (_) {
-      // 무시 — 다음 진입 시 다시 시도
-    }
+    // 전역 unread count를 서버 값으로 동기화 (FCM이 +1 하기 전 기준값)
+    // ignore: unawaited_futures
+    UnreadNotificationCount.refresh();
   }
 
   Future<void> _fetch() async {
@@ -588,7 +578,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   MaterialPageRoute(builder: (_) => const NotificationCenterScreen()),
                 );
                 // 알림 센터에서 read-all 호출하므로 돌아오면 unread는 0
-                if (mounted) setState(() => _unreadCount = 0);
+                UnreadNotificationCount.reset();
               },
               borderRadius: BorderRadius.circular(12),
               child: Container(
@@ -618,19 +608,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ],
                       ),
                     ),
-                    if (_unreadCount > 0)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFDC2626),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _unreadCount > 99 ? '99+' : '$_unreadCount',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
-                        ),
-                      ),
+                    // FCM 도착 시 즉시 +1, read-all 후 0 — 전역 ValueNotifier 구독
+                    ValueListenableBuilder<int>(
+                      valueListenable: UnreadNotificationCount.notifier,
+                      builder: (_, unread, __) {
+                        if (unread <= 0) return const SizedBox.shrink();
+                        return Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFDC2626),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            unread > 99 ? '99+' : '$unread',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700),
+                          ),
+                        );
+                      },
+                    ),
                     const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
                   ],
                 ),

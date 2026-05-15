@@ -5,6 +5,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
 import '../api/api_client.dart';
+import '../state/unread_notification_count.dart';
 import 'notification_router.dart';
 import 'notification_service.dart';
 
@@ -47,6 +48,8 @@ class FcmService {
       final data = message.data;
       final title = notif?.title ?? data['title']?.toString() ?? '냉부해';
       final body = notif?.body ?? data['body']?.toString() ?? '';
+      // 마이페이지 배지 즉시 +1 (인앱 DB에는 AppNotificationService가 이미 저장)
+      UnreadNotificationCount.increment();
       if (body.isEmpty) return;
       // 포그라운드는 사용자가 이미 앱 보고 있는 상태 → 알림만 띄우고 자동 라우팅은 안 함
       NotificationService.showLocal(title: title, body: body);
