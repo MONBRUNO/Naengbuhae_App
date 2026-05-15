@@ -163,10 +163,12 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
             spacing: 8,
             runSpacing: 4,
             children: [
-              _badge(r['category']?.toString() ?? '', Colors.black, Colors.white),
-              _badge('${r['cookingTime'] ?? '-'}분', const Color(0xFFF5F5F5), Colors.black),
-              _badge('${r['servings'] ?? '-'}인분', const Color(0xFFF5F5F5), Colors.black),
-              _badge(r['difficulty']?.toString() ?? '', const Color(0xFFF5F5F5), Colors.black),
+              _badge(r['category']?.toString() ?? '',
+                  context.isDark ? Colors.white : Colors.black,
+                  context.isDark ? Colors.black : Colors.white),
+              _badge('${r['cookingTime'] ?? '-'}분', context.cardBg, context.textColor),
+              _badge('${r['servings'] ?? '-'}인분', context.cardBg, context.textColor),
+              _badge(r['difficulty']?.toString() ?? '', context.cardBg, context.textColor),
               if (match?['matchRate'] != null)
                 _badge('${match!['matchRate']}% 매칭', _accentGreen, Colors.black),
             ],
@@ -224,9 +226,9 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                 icon: const Icon(Icons.add_shopping_cart, size: 18),
                 label: Text(_adding ? '추가 중...' : '부족한 재료 ${missing.length}개 장보기에 추가'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.black,
+                  foregroundColor: context.textColor,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  side: const BorderSide(color: Colors.black),
+                  side: BorderSide(color: context.textColor),
                 ),
               ),
             ),
@@ -243,10 +245,17 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
                       Container(
                         width: 24,
                         height: 24,
-                        decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle),
+                        decoration: BoxDecoration(
+                          color: context.isDark ? Colors.white : Colors.black,
+                          shape: BoxShape.circle,
+                        ),
                         alignment: Alignment.center,
                         child: Text('${e.key + 1}',
-                            style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                            style: TextStyle(
+                              color: context.isDark ? Colors.black : Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            )),
                       ),
                       const SizedBox(width: 12),
                       Expanded(child: Text(e.value, style: const TextStyle(fontSize: 14, height: 1.5))),
