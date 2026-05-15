@@ -279,7 +279,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade100,
+                  color: context.isDark ? const Color(0xFF450A0A) : Colors.red.shade100,
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Row(
