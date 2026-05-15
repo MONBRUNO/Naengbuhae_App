@@ -186,8 +186,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   _socialButton('네이버로 시작하기', const Color(0xFF03C75A), Colors.white,
                       provider: 'naver'),
                   const SizedBox(height: 8),
-                  _socialButton('구글로 시작하기', Colors.white, Colors.black,
-                      border: true, provider: 'google'),
+                  _socialButton(
+                    '구글로 시작하기',
+                    context.isDark ? const Color(0xFF374151) : Colors.white,
+                    context.isDark ? Colors.white : Colors.black,
+                    border: true,
+                    provider: 'google',
+                  ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -203,9 +208,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (!mounted || newUsername == null || newUsername.isEmpty) return;
                           setState(() => _usernameController.text = newUsername);
                         },
-                        child: const Text('회원가입',
+                        child: Text('회원가입',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: context.textColor,
                               fontWeight: FontWeight.w700,
                               decoration: TextDecoration.underline,
                             )),
