@@ -13,7 +13,6 @@ import '../utils/format.dart';
 import '../utils/theme_colors.dart';
 import '../widgets/login_required.dart';
 import '../widgets/notification_settings_section.dart';
-import 'change_password_screen.dart';
 import 'family_activity_screen.dart';
 import 'fridge_management_screen.dart';
 import 'login_screen.dart';
@@ -851,7 +850,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '맞춤 레시피',
                   Icons.restaurant_menu,
-                  context.skyAccent,
+                  context.accentColor,
                   bgColor: context.cardBg,
                   borderColor: context.borderColor,
                   textColor: context.textColor,
@@ -860,7 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '식단 계획',
                   Icons.calendar_month,
-                  context.skyAccent,
+                  const Color(0xFF3B82F6),
                   bgColor: context.cardBg,
                   borderColor: context.borderColor,
                   textColor: context.textColor,
@@ -871,7 +870,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '소비 우선순위',
                   Icons.trending_up,
-                  context.skyAccent,
+                  const Color(0xFFF97316),
                   bgColor: context.cardBg,
                   borderColor: context.borderColor,
                   textColor: context.textColor,
@@ -880,7 +879,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 _featureCard(
                   '영양 분석',
                   Icons.favorite,
-                  context.skyAccent,
+                  const Color(0xFF22C55E),
                   bgColor: context.cardBg,
                   borderColor: context.borderColor,
                   textColor: context.textColor,
@@ -922,7 +921,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ],
 
-          // 계정 관리 — LOCAL 가입자만 비밀번호 변경 노출, 회원 탈퇴는 공통
+          // 계정 관리 — 회원 탈퇴 (비밀번호 변경은 프로필 수정 화면으로 이동)
           Container(
             margin: const EdgeInsets.only(top: 24),
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -931,20 +930,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             child: Column(
               children: [
-                if (p['provider'] == 'LOCAL')
-                  TextButton(
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
-                    ),
-                    child: Text(
-                      '비밀번호 변경',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: context.subTextColor,
-                        decoration: TextDecoration.underline,
-                      ),
-                    ),
-                  ),
                 TextButton(
                   onPressed: _deleteAccount,
                   child: const Text(

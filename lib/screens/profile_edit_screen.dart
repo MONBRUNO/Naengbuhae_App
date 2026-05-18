@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../utils/theme_colors.dart';
+import 'change_password_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -252,6 +253,21 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 ),
               ),
             ),
+            // 비밀번호 변경: LOCAL 가입자만 (소셜 계정은 비번이 없음)
+            if (widget.profile['provider'] == 'LOCAL')
+              TextButton(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ChangePasswordScreen()),
+                ),
+                child: Text(
+                  '비밀번호 변경',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: context.subTextColor,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

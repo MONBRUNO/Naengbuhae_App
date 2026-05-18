@@ -7,7 +7,31 @@
 
 ---
 
-## 🆕 이번 작업 정리 (2026-05-15)
+## 🆕 이번 작업 정리 (2026-05-18)
+
+### 디자인 / 색상
+
+**프로필 "맞춤 기능" 아이콘 색 복구**
+- 다크모드 적용 시 4개 카드 아이콘을 전부 `skyAccent`로 통일했던 걸 웹과 동일한 distinct 색으로 되돌림
+- `profile_screen.dart` — 맞춤 레시피=`accentColor`, 식단 계획=`#3B82F6`(blue-500), 소비 우선순위=`#F97316`(orange-500), 영양 분석=`#22C55E`(green-500)
+- 대시보드 기능 카드는 원래 distinct 색이라 변경 없음
+
+### 계정 관리
+
+**비밀번호 변경 위치 이동**
+- `profile_screen.dart` 계정 관리(회원 탈퇴 위) → 회원 카드 탭 시 열리는 `ProfileEditScreen`(프로필 수정) 하단으로 이동
+- `profile['provider'] == 'LOCAL'`일 때만 노출 (조건 그대로)
+- `change_password_screen.dart` import: profile_screen에서 제거, profile_edit_screen에 추가
+- profile_screen 계정 관리 영역엔 이제 **회원 탈퇴만** 남음
+
+### 빌드
+
+**FCM google-services 플러그인 조건부 적용**
+- `android/app/build.gradle.kts` — `google-services.json`이 있을 때만 플러그인 적용. 파일 없어도 빌드 진행(알림은 로컬만 동작)
+
+---
+
+## 이전 작업 정리 (2026-05-15)
 
 ### 계정 관리
 
