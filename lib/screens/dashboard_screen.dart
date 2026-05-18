@@ -310,23 +310,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final msg = danger > 0
         ? '유통기한이 지난 식재료가 $danger개 있어요'
         : '유통기한이 임박한 식재료가 $warning개 있어요';
-    final isDark = context.isDark;
+    // 웹 패턴: 다크 카드 + 4px 컬러 좌측바 + 컬러 아이콘
+    final accent = danger > 0 ? context.statusDanger : context.statusWarning;
     return Container(
-      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
+        border: Border.all(color: context.borderColor),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(msg, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: accent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: accent, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(msg,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.textColor)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

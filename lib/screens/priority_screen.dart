@@ -174,7 +174,6 @@ class _PriorityScreenState extends State<PriorityScreen> {
     final dColor = statusColor(ExpiryStatus.danger);
     final wColor = statusColor(ExpiryStatus.warning);
     final sColor = statusColor(ExpiryStatus.safe);
-    final isDark = context.isDark;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -231,14 +230,11 @@ class _PriorityScreenState extends State<PriorityScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    _statBox(d, total, '위험', dColor,
-                        isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2)),
+                    _statBox(d, total, '위험', dColor),
                     const SizedBox(height: 8),
-                    _statBox(w, total, '주의', wColor,
-                        isDark ? const Color(0xFF422006) : const Color(0xFFFEFCE8)),
+                    _statBox(w, total, '주의', wColor),
                     const SizedBox(height: 8),
-                    _statBox(s, total, '안전', sColor,
-                        isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4)),
+                    _statBox(s, total, '안전', sColor),
                   ],
                 ),
               ),
@@ -249,11 +245,15 @@ class _PriorityScreenState extends State<PriorityScreen> {
     );
   }
 
-  Widget _statBox(int count, int total, String label, Color dotColor, Color bg) {
+  Widget _statBox(int count, int total, String label, Color dotColor) {
     final pct = total == 0 ? 0 : (count * 100 / total).round();
+    // 웹 --status-*-bg 처럼 status색 옅은 틴트 (채도 낮게)
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: dotColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         children: [
           Container(
@@ -261,12 +261,17 @@ class _PriorityScreenState extends State<PriorityScreen> {
             decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(label, style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: context.subTextColor)),
           const Spacer(),
-          Text('$count', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          Text('$count',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: context.textColor)),
           const SizedBox(width: 4),
           Text('· $pct%',
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+              style: TextStyle(fontSize: 11, color: context.subTextColor)),
         ],
       ),
     );
@@ -278,23 +283,44 @@ class _PriorityScreenState extends State<PriorityScreen> {
         : warning > 0
             ? '주의: $warning개 식재료 곧 소비 필요'
             : '안전: 모든 식재료가 양호합니다';
-    final isDark = context.isDark;
+    // 웹 패턴: 다크 카드 + 4px 컬러 좌측바 + 컬러 아이콘
+    final accent = danger > 0
+        ? context.statusDanger
+        : warning > 0
+            ? context.statusWarning
+            : context.statusSafe;
     return Container(
-      padding: const EdgeInsets.all(16),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF450A0A) : const Color(0xFFFEF2F2),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
+        border: Border.all(color: context.borderColor),
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-          ),
-        ],
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 4, color: accent),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: accent, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(text,
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.textColor)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

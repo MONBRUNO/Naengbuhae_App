@@ -633,29 +633,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
           if (p['recommendedCalories'] != null)
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(16)),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.local_fire_department, color: _accentGreen, size: 20),
-                        SizedBox(width: 8),
-                        Text('일일 권장 칼로리',
-                            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text('${formatThousands(p['recommendedCalories'] as num)} kcal',
-                        style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 4),
-                    Text('${dietGoal ?? ''} 목표 기준',
-                        style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 13)),
-                  ],
-                ),
-              ),
+              child: Builder(builder: (context) {
+                // 웹: bg-foreground text-background (다크=크림 카드+어두운 글씨)
+                final cardColor = context.textColor;
+                final onCard = context.boxBg;
+                return Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                      color: cardColor,
+                      borderRadius: BorderRadius.circular(16)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.local_fire_department,
+                              color: context.skyAccent, size: 20),
+                          const SizedBox(width: 8),
+                          Text('일일 권장 칼로리',
+                              style: TextStyle(
+                                  color: onCard,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('${formatThousands(p['recommendedCalories'] as num)} kcal',
+                          style: TextStyle(
+                              color: onCard,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: 4),
+                      Text('${dietGoal ?? ''} 목표 기준',
+                          style: TextStyle(
+                              color: onCard.withValues(alpha: 0.55),
+                              fontSize: 13)),
+                    ],
+                  ),
+                );
+              }),
             ),
 
           // 건강 목표
