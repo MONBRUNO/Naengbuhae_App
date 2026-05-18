@@ -111,11 +111,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  const Text('스마트 냉장고',
-                      style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 8),
-                  const Text('신선한 식재료 관리의 시작',
-                      style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  // 브랜드 로고 (로고 자체 배경이 흰색 → 흰 플레이트로 의도적 처리, 다크/라이트 공통)
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Image.asset('assets/brand/logo_full.png',
+                          height: 96),
+                    ),
+                  ),
                   const SizedBox(height: 28),
                   _textField(
                     controller: _usernameController,
