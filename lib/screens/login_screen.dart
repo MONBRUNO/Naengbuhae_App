@@ -111,11 +111,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  // 브랜드 로고 (배경 투명 PNG — 다크/라이트 모두 자연스럽게)
-                  Center(
-                    child: Image.asset('assets/brand/logo_full.png',
-                        height: 260),
-                  ),
+                  // 브랜드 로고 (폼 너비 꽉 채움 — 투명 PNG)
+                  Image.asset('assets/brand/logo_full.png',
+                      width: double.infinity, fit: BoxFit.contain),
                   const SizedBox(height: 28),
                   _textField(
                     controller: _usernameController,
