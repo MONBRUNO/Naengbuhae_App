@@ -111,18 +111,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 12),
-                  // 브랜드 로고 (로고 자체 배경이 흰색 → 흰 플레이트로 의도적 처리, 다크/라이트 공통)
+                  // 브랜드 로고 (배경 투명 PNG — 다크/라이트 모두 자연스럽게)
                   Center(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 14),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Image.asset('assets/brand/logo_full.png',
-                          height: 96),
-                    ),
+                    child: Image.asset('assets/brand/logo_full.png',
+                        height: 130),
                   ),
                   const SizedBox(height: 28),
                   _textField(
