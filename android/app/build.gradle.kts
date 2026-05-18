@@ -3,8 +3,12 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
-    // FCM
-    id("com.google.gms.google-services")
+}
+
+// FCM — google-services.json이 있을 때만 플러그인 적용.
+// 파일이 없으면 빌드는 그대로 진행되고 알림은 로컬만 동작 (fcm_service.dart 참고).
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
