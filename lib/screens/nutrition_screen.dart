@@ -190,34 +190,49 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: const [
-                      Icon(Icons.warning_amber, color: Color(0xFFEF4444)),
-                      SizedBox(width: 8),
-                      Text('알레르기 주의 식재료', style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFFB91C1C))),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  ...allergyIngredients.map((i) {
-                    final w = ((i['allergyWarnings'] as List?) ?? const []).cast<String>();
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
-                        children: [
-                          Text(i['name']?.toString() ?? '',
-                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text('← ${w.join(", ")}',
-                              style: const TextStyle(fontSize: 12, color: Color(0xFFB91C1C)))),
-                        ],
-                      ),
-                    );
-                  }),
-                ],
-              ),
+              child: Builder(builder: (context) {
+                final dark = context.isDark;
+                final iconColor =
+                    dark ? const Color(0xFFF87171) : const Color(0xFFEF4444);
+                final redText =
+                    dark ? const Color(0xFFFCA5A5) : const Color(0xFFB91C1C);
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.warning_amber, color: iconColor),
+                        const SizedBox(width: 8),
+                        Text('알레르기 주의 식재료',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w700, color: redText)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    ...allergyIngredients.map((i) {
+                      final w = ((i['allergyWarnings'] as List?) ?? const [])
+                          .cast<String>();
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            Text(i['name']?.toString() ?? '',
+                                style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: context.textColor)),
+                            const SizedBox(width: 8),
+                            Expanded(
+                                child: Text('← ${w.join(", ")}',
+                                    style: TextStyle(
+                                        fontSize: 12, color: redText))),
+                          ],
+                        ),
+                      );
+                    }),
+                  ],
+                );
+              }),
             ),
             const SizedBox(height: 16),
           ],

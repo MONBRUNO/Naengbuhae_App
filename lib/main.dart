@@ -43,6 +43,7 @@ class NaengbuhaeApp extends StatelessWidget {
         themeMode: mode,
         theme: ThemeData(
           useMaterial3: true,
+          fontFamily: 'Pretendard',
           colorScheme: ColorScheme.fromSeed(
             seedColor: _accentGreen,
             brightness: Brightness.light,
@@ -68,6 +69,7 @@ class NaengbuhaeApp extends StatelessWidget {
         // sky(#8BCEEA) 소프트 액센트. 형광 라임은 라이트에서만.
         darkTheme: ThemeData(
           useMaterial3: true,
+          fontFamily: 'Pretendard',
           colorScheme: ColorScheme.fromSeed(
             seedColor: const Color(0xFF8BCEEA),
             brightness: Brightness.dark,

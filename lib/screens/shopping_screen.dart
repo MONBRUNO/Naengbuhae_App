@@ -66,14 +66,14 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.shopping_cart_outlined, size: 56, color: Color(0xFFD1D5DB)),
+            Icon(Icons.shopping_cart_outlined, size: 56, color: context.hintTextColor),
             const SizedBox(height: 16),
             const Text('장보기 기능은 로그인 후 사용할 수 있어요',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            const Text('가족과 공유되는 장보기 목록은\n계정 데이터로 관리돼요.',
+            Text('가족과 공유되는 장보기 목록은\n계정 데이터로 관리돼요.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280), height: 1.5)),
+                style: TextStyle(fontSize: 12, color: context.subTextColor, height: 1.5)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => LoginRequired.show(context, featureName: '장보기'),
@@ -314,8 +314,8 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
               if (_selectionMode)
                 TextButton(
                   onPressed: _exitSelectionMode,
-                  child: const Text('취소',
-                      style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
+                  child: Text('취소',
+                      style: TextStyle(color: context.subTextColor, fontWeight: FontWeight.w600)),
                 ),
             ],
           ),
@@ -324,7 +324,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
             _selectionMode
                 ? '${_selectedIds.length}개 선택됨'
                 : '총 ${_items.length}개 · 완료 ${checked.length}개',
-            style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+            style: TextStyle(fontSize: 13, color: context.subTextColor),
           ),
           const SizedBox(height: 16),
 
@@ -371,7 +371,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                     onPressed: () => setState(() => _showAddForm = true),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: context.accentColor,
-                      foregroundColor: Colors.black,
+                      foregroundColor: context.onAccent,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       textStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -408,16 +408,16 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
 
           // 빈 상태
           if (_items.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 48),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48),
               child: Column(
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: 48, color: Color(0xFFD1D5DB)),
-                  SizedBox(height: 12),
-                  Text('장보기 리스트가 비어있습니다', style: TextStyle(color: Color(0xFF9CA3AF))),
-                  SizedBox(height: 4),
+                  Icon(Icons.shopping_cart_outlined, size: 48, color: context.hintTextColor),
+                  const SizedBox(height: 12),
+                  Text('장보기 리스트가 비어있습니다', style: TextStyle(color: context.hintTextColor)),
+                  const SizedBox(height: 4),
                   Text('필요한 항목을 추가해보세요',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFD1D5DB))),
+                      style: TextStyle(fontSize: 12, color: context.hintTextColor)),
                 ],
               ),
             ),
@@ -434,7 +434,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
           // 구매 완료
           if (checked.isNotEmpty) ...[
             Text('구매 완료 (${checked.length})',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF6B7280))),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: context.subTextColor)),
             const SizedBox(height: 12),
             ...checked.map(_checkedTile),
           ],
@@ -487,7 +487,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   onPressed: _add,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
-                    foregroundColor: Colors.black,
+                    foregroundColor: context.onAccent,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -540,14 +540,14 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.auto_awesome, size: 14, color: Color(0xFF15803D)),
-              SizedBox(width: 6),
-              Text('이건 어때요?',
+            children: [
+              const Icon(Icons.auto_awesome, size: 14, color: Color(0xFF15803D)),
+              const SizedBox(width: 6),
+              const Text('이건 어때요?',
                   style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Text('자주 비우는데 지금 없어요',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                  style: TextStyle(fontSize: 11, color: context.subTextColor)),
             ],
           ),
           const SizedBox(height: 10),
@@ -581,7 +581,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                         const SizedBox(width: 6),
                         Text('${count}회',
-                            style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                            style: TextStyle(fontSize: 11, color: context.hintTextColor)),
                       ],
                     ),
                   ),
@@ -627,7 +627,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
             if (_selectionMode)
               Icon(
                 isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
+                color: isSelected ? context.textColor : context.hintTextColor,
                 size: 22,
               )
             else
@@ -650,7 +650,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   Text(item['name']?.toString() ?? '',
                       style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                   Text('${item['quantity']}${item['unit'] ?? ''}',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                      style: TextStyle(fontSize: 12, color: context.subTextColor)),
                 ],
               ),
             ),
@@ -666,7 +666,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 onPressed: transferring ? null : () => _transfer(item),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
-                  foregroundColor: Colors.black,
+                  foregroundColor: context.onAccent,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
@@ -706,7 +706,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
               if (_selectionMode)
                 Icon(
                   isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                  color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
+                  color: isSelected ? context.textColor : context.hintTextColor,
                   size: 22,
                 )
               else
@@ -726,15 +726,15 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   children: [
                     Text(
                       item['name']?.toString() ?? '',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
-                        color: Color(0xFF6B7280),
+                        color: context.subTextColor,
                         decoration: TextDecoration.lineThrough,
                       ),
                     ),
                     Text('${item['quantity']}${item['unit'] ?? ''}',
-                        style: const TextStyle(fontSize: 12, color: Color(0xFF9CA3AF))),
+                        style: TextStyle(fontSize: 12, color: context.hintTextColor)),
                   ],
                 ),
               ),

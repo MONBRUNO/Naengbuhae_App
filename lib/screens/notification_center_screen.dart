@@ -82,12 +82,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
       ]);
     }
     if (_items.isEmpty) {
-      return ListView(children: const [
-        SizedBox(height: 160),
-        Center(child: Icon(Icons.notifications_none, size: 48, color: Color(0xFFD1D5DB))),
-        SizedBox(height: 12),
+      return ListView(children: [
+        const SizedBox(height: 160),
+        Center(child: Icon(Icons.notifications_none, size: 48, color: context.hintTextColor)),
+        const SizedBox(height: 12),
         Center(child: Text('받은 알림이 없어요',
-            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14))),
+            style: TextStyle(color: context.hintTextColor, fontSize: 14))),
       ]);
     }
     return ListView.separated(
@@ -111,7 +111,7 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
               : (context.isDark ? const Color(0xFF365314) : const Color(0xFFF7FEE7)),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isRead ? const Color(0xFFE5E7EB) : const Color(0xFFD9F99D),
+            color: isRead ? context.borderColor : const Color(0xFFD9F99D),
           ),
         ),
         child: Row(
@@ -140,12 +140,12 @@ class _NotificationCenterScreenState extends State<NotificationCenterScreen> {
                       style: TextStyle(fontSize: 13, color: context.subTextColor, height: 1.4)),
                   const SizedBox(height: 6),
                   Text(_formatTime(item['createdAt']?.toString()),
-                      style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                      style: TextStyle(fontSize: 11, color: context.hintTextColor)),
                 ],
               ),
             ),
             if (item['route'] != null)
-              const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              Icon(Icons.chevron_right, color: context.hintTextColor),
           ],
         ),
       ),

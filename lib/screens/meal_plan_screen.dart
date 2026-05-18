@@ -181,8 +181,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
         children: [
           // 부제
-          const Text('보유 식재료 기반 균형잡힌 식단',
-              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+          Text('보유 식재료 기반 균형잡힌 식단',
+              style: TextStyle(fontSize: 13, color: context.subTextColor)),
           const SizedBox(height: 16),
 
           // 기간 선택
@@ -286,13 +286,13 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
               padding: const EdgeInsets.symmetric(vertical: 48),
               child: Column(
                 children: [
-                  const Icon(Icons.restaurant_outlined, size: 48, color: Color(0xFFD1D5DB)),
+                  Icon(Icons.restaurant_outlined, size: 48, color: context.hintTextColor),
                   const SizedBox(height: 12),
-                  const Text('식단을 생성할 레시피가 부족합니다',
-                      style: TextStyle(color: Color(0xFF9CA3AF))),
+                  Text('식단을 생성할 레시피가 부족합니다',
+                      style: TextStyle(color: context.hintTextColor)),
                   const SizedBox(height: 4),
-                  const Text('레시피를 추가하면 식단이 자동 생성돼요',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFD1D5DB))),
+                  Text('레시피를 추가하면 식단이 자동 생성돼요',
+                      style: TextStyle(fontSize: 12, color: context.hintTextColor)),
                 ],
               ),
             )
@@ -314,12 +314,12 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text('더 정확한 식단 추천을 위해',
+                children: [
+                  const Text('더 정확한 식단 추천을 위해',
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text('보유 식재료를 등록하면 맞춤 식단을 추천해드려요',
-                      style: TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                      style: TextStyle(fontSize: 11, color: context.subTextColor)),
                 ],
               ),
             ),
@@ -352,19 +352,19 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        Text(label, style: TextStyle(fontSize: 11, color: context.subTextColor)),
         const SizedBox(height: 4),
         RichText(
           text: TextSpan(
             style: TextStyle(color: context.textColor),
             children: [
               TextSpan(text: value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-              TextSpan(text: ' $unit', style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+              TextSpan(text: ' $unit', style: TextStyle(fontSize: 12, color: context.subTextColor)),
             ],
           ),
         ),
         const SizedBox(height: 2),
-        Text(avg, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        Text(avg, style: TextStyle(fontSize: 11, color: context.subTextColor)),
       ],
     );
   }
@@ -375,7 +375,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       children: [
         Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+        Text(label, style: TextStyle(fontSize: 11, color: context.subTextColor)),
       ],
     );
   }
@@ -393,13 +393,13 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.calendar_today_outlined, size: 16, color: Color(0xFF6B7280)),
+              Icon(Icons.calendar_today_outlined, size: 16, color: context.subTextColor),
               const SizedBox(width: 8),
               Text('${day.day}요일',
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
               const Spacer(),
               Text('${formatThousands(day.totalCalories)}kcal',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                  style: TextStyle(fontSize: 12, color: context.subTextColor)),
             ],
           ),
           const SizedBox(height: 12),
@@ -412,7 +412,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           Row(
             children: [
               Text('단백질 ${day.totalProtein.toInt()}g',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                  style: TextStyle(fontSize: 12, color: context.subTextColor)),
               const Spacer(),
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
@@ -439,7 +439,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
       child: Row(
         children: [
           SizedBox(width: 40,
-              child: Text(label, style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)))),
+              child: Text(label, style: TextStyle(fontSize: 13, color: context.subTextColor))),
           const SizedBox(width: 8),
           Expanded(
             child: Text(meal, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),

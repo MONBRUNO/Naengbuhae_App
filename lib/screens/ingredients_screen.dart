@@ -238,8 +238,8 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     if (_selectionMode)
                       TextButton(
                         onPressed: _exitSelectionMode,
-                        child: const Text('취소',
-                            style: TextStyle(color: Color(0xFF6B7280), fontWeight: FontWeight.w600)),
+                        child: Text('취소',
+                            style: TextStyle(color: context.subTextColor, fontWeight: FontWeight.w600)),
                       )
                     else
                       const FridgeSelectorButton(),
@@ -248,7 +248,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   _selectionMode ? '${_selectedIds.length}개 선택됨' : '총 ${list.length}개',
-                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                  style: TextStyle(fontSize: 13, color: context.subTextColor),
                 ),
               ],
             ),
@@ -307,7 +307,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
-                    foregroundColor: Colors.black,
+                    foregroundColor: context.onAccent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     textStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -373,11 +373,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
               onChanged: (v) => setState(() => _searchQuery = v),
               decoration: InputDecoration(
                 hintText: '이름으로 검색',
-                prefixIcon: const Icon(Icons.search, size: 20, color: Color(0xFF9CA3AF)),
+                prefixIcon: Icon(Icons.search, size: 20, color: context.hintTextColor),
                 suffixIcon: _searchQuery.isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.close, size: 18, color: Color(0xFF9CA3AF)),
+                        icon: Icon(Icons.close, size: 18, color: context.hintTextColor),
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
@@ -482,14 +482,14 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     Icon(
                       _showExpiredOnly ? Icons.check_box : Icons.check_box_outline_blank,
                       size: 18,
-                      color: _showExpiredOnly ? const Color(0xFFDC2626) : const Color(0xFF9CA3AF),
+                      color: _showExpiredOnly ? const Color(0xFFDC2626) : context.hintTextColor,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       '만료된 것만 보기',
                       style: TextStyle(
                         fontSize: 13,
-                        color: _showExpiredOnly ? const Color(0xFFDC2626) : const Color(0xFF6B7280),
+                        color: _showExpiredOnly ? const Color(0xFFDC2626) : context.subTextColor,
                         fontWeight: _showExpiredOnly ? FontWeight.w600 : FontWeight.w500,
                       ),
                     ),
@@ -502,13 +502,13 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
 
           // 목록
           if (list.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 48, horizontal: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 20),
               child: Column(
                 children: [
-                  Icon(Icons.inventory_2_outlined, size: 48, color: Color(0xFFD1D5DB)),
-                  SizedBox(height: 12),
-                  Text('조건에 맞는 식재료가 없습니다', style: TextStyle(color: Color(0xFF9CA3AF))),
+                  Icon(Icons.inventory_2_outlined, size: 48, color: context.hintTextColor),
+                  const SizedBox(height: 12),
+                  Text('조건에 맞는 식재료가 없습니다', style: TextStyle(color: context.hintTextColor)),
                 ],
               ),
             )
@@ -569,7 +569,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 if (_selectionMode) ...[
                   Icon(
                     isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
+                    color: isSelected ? context.textColor : context.hintTextColor,
                     size: 22,
                   ),
                   const SizedBox(width: 10),
@@ -614,7 +614,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 ),
                 if (!_selectionMode)
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, size: 20, color: Colors.grey),
+                    icon: Icon(Icons.delete_outline, size: 20, color: context.subTextColor),
                     onPressed: () => _delete(item),
                   ),
               ],
@@ -622,11 +622,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             const SizedBox(height: 4),
             Text(
               '${item['quantity']}${item['unit']} · ${item['category']} · ${item['storage']}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: context.subTextColor),
             ),
             Text(
               '유통기한: ${item['expirationDate']}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 12, color: context.subTextColor),
             ),
           ],
         ),

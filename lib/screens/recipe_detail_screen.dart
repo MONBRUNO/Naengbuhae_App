@@ -184,10 +184,19 @@ class _RecipeDetailScreenState extends State<RecipeDetailScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.warning_amber, color: Color(0xFFEF4444)),
+                  Icon(Icons.warning_amber,
+                      color: context.isDark
+                          ? const Color(0xFFF87171)
+                          : const Color(0xFFEF4444)),
                   const SizedBox(width: 8),
-                  Expanded(child: Text('알레르기 주의: ${warnings.join(", ")}',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFB91C1C)))),
+                  Expanded(
+                      child: Text('알레르기 주의: ${warnings.join(", ")}',
+                          style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: context.isDark
+                                  ? const Color(0xFFFCA5A5)
+                                  : const Color(0xFFB91C1C)))),
                 ],
               ),
             ),

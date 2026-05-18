@@ -107,7 +107,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
               decoration: _inputDecoration(null).copyWith(
                 suffixIcon: IconButton(
                   icon: Icon(_showPw ? Icons.visibility_off : Icons.visibility,
-                      color: Colors.grey),
+                      color: context.subTextColor),
                   onPressed: () => setState(() => _showPw = !_showPw),
                 ),
               ),
@@ -120,7 +120,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
-                  foregroundColor: Colors.black,
+                  foregroundColor: context.onAccent,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),

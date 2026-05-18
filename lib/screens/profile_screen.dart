@@ -70,6 +70,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  // 헤더 알림 아이콘 → 알림 설정을 바텀시트로 표시
+  void _openNotificationSettings() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.boxBg,
+      showDragHandle: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom + 8,
+            ),
+            child: const NotificationSettingsSection(),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _logout() async {
     final ok = await showDialog<bool>(
       context: context,
@@ -454,6 +477,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.notifications_outlined,
+                      color: Color(0xFF6B7280)),
+                  tooltip: '알림 설정',
+                  onPressed: _openNotificationSettings,
+                ),
+                IconButton(
                   icon: const Icon(Icons.logout, color: Color(0xFF6B7280)),
                   tooltip: '로그아웃',
                   onPressed: _logout,
@@ -796,9 +825,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
           ),
 
-          // 알림 설정
-          const NotificationSettingsSection(),
-          _themeModeSection(),
+          // 알림 설정은 헤더 알림 아이콘 → 바텀시트로 이동
+          // (테마 선택은 권장 영양소 비율 아래로 이동 — 웹과 동일)
 
           // 알레르기 정보
           if (allergies != null && allergies.isNotEmpty)
@@ -811,24 +839,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: context.isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA), width: 2),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: const [
-                        Icon(Icons.warning_amber, color: Color(0xFFDC2626), size: 20),
-                        SizedBox(width: 8),
-                        Text('알레르기 주의',
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF7F1D1D))),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(allergies, style: const TextStyle(fontSize: 14, color: Color(0xFF991B1B), height: 1.5)),
-                    const SizedBox(height: 12),
-                    const Text('⚠️ 레시피 추천 시 해당 식재료는 제외됩니다',
-                        style: TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
-                  ],
-                ),
+                child: Builder(builder: (context) {
+                  // 다크: 어두운 적색 배경이라 글씨는 밝은 레드로 (red-on-red 가독성)
+                  final dark = context.isDark;
+                  final iconColor =
+                      dark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
+                  final titleColor =
+                      dark ? const Color(0xFFFCA5A5) : const Color(0xFF7F1D1D);
+                  final bodyColor =
+                      dark ? const Color(0xFFFECACA) : const Color(0xFF991B1B);
+                  final footColor =
+                      dark ? const Color(0xFFFCA5A5) : const Color(0xFFDC2626);
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.warning_amber, color: iconColor, size: 20),
+                          const SizedBox(width: 8),
+                          Text('알레르기 주의',
+                              style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: titleColor)),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(allergies,
+                          style: TextStyle(
+                              fontSize: 14, color: bodyColor, height: 1.5)),
+                      const SizedBox(height: 12),
+                      Text('⚠️ 레시피 추천 시 해당 식재료는 제외됩니다',
+                          style: TextStyle(fontSize: 11, color: footColor)),
+                    ],
+                  );
+                }),
               ),
             ),
 
@@ -920,6 +965,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
             ),
           ],
+
+          // 테마 선택 (웹과 동일하게 권장 영양소 비율 아래)
+          _themeModeSection(),
 
           // 계정 관리 — 회원 탈퇴 (비밀번호 변경은 프로필 수정 화면으로 이동)
           Container(

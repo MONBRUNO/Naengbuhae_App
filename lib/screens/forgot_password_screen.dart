@@ -85,8 +85,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         const Text('비밀번호 찾기',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700)),
         const SizedBox(height: 8),
-        const Text('가입할 때 사용한 이메일을 입력해주세요.\n재설정 링크를 보내드릴게요.',
-            style: TextStyle(fontSize: 13, color: Color(0xFF6B7280), height: 1.5)),
+        Text('가입할 때 사용한 이메일을 입력해주세요.\n재설정 링크를 보내드릴게요.',
+            style: TextStyle(fontSize: 13, color: context.subTextColor, height: 1.5)),
         const SizedBox(height: 32),
         TextField(
           controller: _emailController,
@@ -154,9 +154,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 4),
-        const Center(
+        Center(
           child: Text('재설정 안내 메일을 보냈어요.',
-              style: TextStyle(fontSize: 13, color: Color(0xFF6B7280))),
+              style: TextStyle(fontSize: 13, color: context.subTextColor)),
         ),
         const SizedBox(height: 24),
         Container(
@@ -165,15 +165,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             color: context.cardBg,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: const Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.email_outlined, size: 16, color: Color(0xFF6B7280)),
-              SizedBox(width: 8),
+              Icon(Icons.email_outlined, size: 16, color: context.subTextColor),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '메일이 안 오면 스팸함을 확인하거나 이메일 주소가 정확한지 확인해주세요. 링크는 30분 동안 유효합니다.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF6B7280), height: 1.5),
+                  style: TextStyle(fontSize: 12, color: context.subTextColor, height: 1.5),
                 ),
               ),
             ],

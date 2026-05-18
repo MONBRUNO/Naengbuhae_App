@@ -237,7 +237,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                   onPressed: _saving ? null : _saveAll,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.accentColor,
-                    foregroundColor: Colors.black,
+                    foregroundColor: context.onAccent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
@@ -267,8 +267,8 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
             const SizedBox(height: 24),
             const CircularProgressIndicator(),
             const SizedBox(height: 12),
-            const Text('AI가 영수증을 분석 중...',
-                style: TextStyle(fontWeight: FontWeight.w500, color: Color(0xFF6B7280))),
+            Text('AI가 영수증을 분석 중...',
+                style: TextStyle(fontWeight: FontWeight.w500, color: context.subTextColor)),
           ],
         ),
       );
@@ -281,10 +281,10 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.receipt_long_outlined, size: 64, color: Color(0xFFD1D5DB)),
+              Icon(Icons.receipt_long_outlined, size: 64, color: context.hintTextColor),
               const SizedBox(height: 12),
-              const Text('영수증 사진을 선택해주세요',
-                  style: TextStyle(color: Color(0xFF6B7280))),
+              Text('영수증 사진을 선택해주세요',
+                  style: TextStyle(color: context.subTextColor)),
               const SizedBox(height: 16),
               ElevatedButton.icon(
                 onPressed: _pickImage,
@@ -292,7 +292,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                 label: const Text('영수증 촬영/선택'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
-                  foregroundColor: Colors.black,
+                  foregroundColor: context.onAccent,
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -356,7 +356,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.delete_outline, size: 20, color: Color(0xFF9CA3AF)),
+                icon: Icon(Icons.delete_outline, size: 20, color: context.hintTextColor),
                 onPressed: () => setState(() => _items.removeAt(idx)),
                 padding: const EdgeInsets.all(4),
                 constraints: const BoxConstraints(),
@@ -411,7 +411,7 @@ class _ReceiptRecognitionScreenState extends State<ReceiptRecognitionScreen> {
             const SizedBox(height: 6),
             Text(
               '유통기한: ${_formatDate(DateTime.now().add(Duration(days: item.expiryDays)))} (${item.expiryDays}일)',
-              style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+              style: TextStyle(fontSize: 11, color: context.subTextColor),
             ),
           ],
         ],

@@ -178,24 +178,22 @@ class _PriorityScreenState extends State<PriorityScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF3B0764), Color(0xFF500724)]
-              : const [Color(0xFFFAF5FF), Color(0xFFFDF2F8)],
-        ),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? const Color(0xFF6B21A8) : const Color(0xFFE9D5FF)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            children: const [
-              Icon(Icons.trending_up, color: Color(0xFF9333EA), size: 20),
-              SizedBox(width: 8),
-              Text('식재료 위험도 분석', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            children: [
+              Icon(Icons.trending_up, color: context.skyAccent, size: 20),
+              const SizedBox(width: 8),
+              Text('식재료 위험도 분석',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: context.textColor)),
             ],
           ),
           const SizedBox(height: 16),

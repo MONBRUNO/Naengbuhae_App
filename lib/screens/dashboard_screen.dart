@@ -112,7 +112,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         const SizedBox(height: 4),
         Text('총 ${_ingredients.length}개 식재료 보관 중',
-            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 13)),
+            style: TextStyle(color: context.subTextColor, fontSize: 13)),
         const SizedBox(height: 16),
         if (_ingredients.isNotEmpty) _statusSummary(dangerCount, warningCount, safeCount),
         const SizedBox(height: 16),
@@ -130,9 +130,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Text('식재료 목록', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             GestureDetector(
               onTap: () => widget.onSeeAllIngredients?.call(),
-              child: const Text(
+              child: Text(
                 '전체보기',
-                style: TextStyle(fontSize: 13, color: Colors.grey, fontWeight: FontWeight.w500),
+                style: TextStyle(fontSize: 13, color: context.subTextColor, fontWeight: FontWeight.w500),
               ),
             ),
           ],
@@ -176,11 +176,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text('식재료 상태', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                    SizedBox(height: 2),
+                  children: [
+                    const Text('식재료 상태', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 2),
                     Text('현재 냉장고 상태를 확인하세요',
-                        style: TextStyle(fontSize: 11, color: Colors.grey)),
+                        style: TextStyle(fontSize: 11, color: context.subTextColor)),
                   ],
                 ),
               ),
@@ -246,7 +246,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
         style: ElevatedButton.styleFrom(
           backgroundColor: context.accentColor,
-          foregroundColor: Colors.black,
+          foregroundColor: context.onAccent,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -338,11 +338,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       padding: const EdgeInsets.symmetric(vertical: 32),
       child: Column(
         children: [
-          const Icon(Icons.inventory_2_outlined, size: 48, color: Color(0xFFD1D5DB)),
+          Icon(Icons.inventory_2_outlined, size: 48, color: context.hintTextColor),
           const SizedBox(height: 12),
-          const Text('등록된 식재료가 없습니다', style: TextStyle(color: Color(0xFF9CA3AF))),
+          Text('등록된 식재료가 없습니다', style: TextStyle(color: context.hintTextColor)),
           const SizedBox(height: 4),
-          const Text('첫 식재료를 추가해보세요!', style: TextStyle(color: Color(0xFFD1D5DB), fontSize: 12)),
+          Text('첫 식재료를 추가해보세요!', style: TextStyle(color: context.hintTextColor, fontSize: 12)),
         ],
       ),
     );
@@ -384,7 +384,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(height: 4),
                 Text(
                   '${item['quantity']}${item['unit']} · ${item['category']} · ${item['storage']}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(fontSize: 12, color: context.subTextColor),
                 ),
               ],
             ),

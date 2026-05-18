@@ -103,7 +103,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
           controller: _tabController,
           indicatorColor: context.textColor,
           labelColor: context.textColor,
-          unselectedLabelColor: Colors.grey,
+          unselectedLabelColor: context.subTextColor,
           tabs: [
             const Tab(text: '전체'),
             Tab(text: '만들 수 있는 (${_matches.length})'),
@@ -140,10 +140,10 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   Widget _favoriteList() {
     final favs = _favorites;
     if (favs.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(24),
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Text('즐겨찾기한 레시피가 없어요.\n레시피 카드의 하트를 눌러 저장해보세요.',
-            textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            textAlign: TextAlign.center, style: TextStyle(color: context.subTextColor)),
       ));
     }
     return RefreshIndicator(
@@ -162,7 +162,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   }
 
   Widget _allList() {
-    if (_all.isEmpty) return const Center(child: Text('등록된 레시피가 없습니다', style: TextStyle(color: Colors.grey)));
+    if (_all.isEmpty) return Center(child: Text('등록된 레시피가 없습니다', style: TextStyle(color: context.subTextColor)));
     return RefreshIndicator(
       onRefresh: _fetch,
       child: ListView.separated(
@@ -177,10 +177,10 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   Widget _matchList() {
     final list = _matches;
     if (list.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(24),
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(24),
         child: Text('만들 수 있는 요리가 없습니다.\n식재료를 추가하면 추천이 시작됩니다.',
-            textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
+            textAlign: TextAlign.center, style: TextStyle(color: context.subTextColor)),
       ));
     }
     return RefreshIndicator(
@@ -242,7 +242,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                       const SizedBox(height: 4),
                       Text('${recipe['category'] ?? ''} · ${recipe['cookingTime'] ?? '-'}분 · ${recipe['servings'] ?? '-'}인분 · ${recipe['difficulty'] ?? ''}',
-                          style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          style: TextStyle(fontSize: 12, color: context.subTextColor)),
                     ],
                   ),
                 ),
@@ -267,7 +267,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
                       recipe['favorite'] == true ? Icons.favorite : Icons.favorite_border,
                       color: recipe['favorite'] == true
                           ? const Color(0xFFEF4444)
-                          : const Color(0xFF9CA3AF),
+                          : context.hintTextColor,
                       size: 22,
                     ),
                   ),

@@ -332,12 +332,12 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: const Color(0xFFD1D5DB), width: 2),
                         ),
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.photo_camera_outlined, size: 32, color: Color(0xFF9CA3AF)),
-                            SizedBox(height: 8),
+                            Icon(Icons.photo_camera_outlined, size: 32, color: context.hintTextColor),
+                            const SizedBox(height: 8),
                             Text('사진으로 식재료 인식하기',
-                                style: TextStyle(fontSize: 13, color: Color(0xFF9CA3AF), fontWeight: FontWeight.w500)),
+                                style: TextStyle(fontSize: 13, color: context.hintTextColor, fontWeight: FontWeight.w500)),
                           ],
                         ),
                       )
@@ -537,7 +537,7 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
                 onPressed: _submitting ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: context.accentColor,
-                  foregroundColor: Colors.black,
+                  foregroundColor: context.onAccent,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
@@ -599,11 +599,11 @@ class _IngredientEditScreenState extends State<IngredientEditScreen> {
               child: Text(
                 _formatDate(d),
                 style: TextStyle(
-                  color: isPlaceholder ? const Color(0xFF9CA3AF) : Colors.black,
+                  color: isPlaceholder ? context.hintTextColor : context.textColor,
                 ),
               ),
             ),
-            const Icon(Icons.calendar_today_outlined, size: 18, color: Color(0xFF9CA3AF)),
+            Icon(Icons.calendar_today_outlined, size: 18, color: context.hintTextColor),
           ],
         ),
       ),

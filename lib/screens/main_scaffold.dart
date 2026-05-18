@@ -9,6 +9,7 @@ import '../api/ingredient_repo.dart';
 import '../services/notification_service.dart';
 import '../state/fridge_context.dart';
 import '../state/tab_index.dart';
+import '../utils/theme_colors.dart';
 import 'dashboard_screen.dart';
 import 'ingredients_screen.dart';
 import 'login_screen.dart';
@@ -121,7 +122,7 @@ class _BottomNav extends StatelessWidget {
               // 선택 탭은 sky 액센트 (웹과 통일)
               final color = active
                   ? (isDark ? const Color(0xFF8BCEEA) : const Color(0xFF2563EB))
-                  : const Color(0xFF9CA3AF);
+                  : context.hintTextColor;
               return Expanded(
                 child: InkWell(
                   onTap: () => onChanged(i),

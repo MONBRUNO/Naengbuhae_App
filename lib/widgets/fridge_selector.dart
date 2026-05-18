@@ -69,7 +69,7 @@ class _FridgeSwitcherSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFD1D5DB),
+                  color: context.hintTextColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -84,9 +84,9 @@ class _FridgeSwitcherSheet extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               if (list.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-                  child: Text('냉장고가 없습니다', style: TextStyle(color: Color(0xFF9CA3AF))),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
+                  child: Text('냉장고가 없습니다', style: TextStyle(color: context.hintTextColor)),
                 )
               else
                 ...list.map((f) {
@@ -94,7 +94,7 @@ class _FridgeSwitcherSheet extends StatelessWidget {
                   return ListTile(
                     leading: Icon(
                       isSelected ? LucideIcons.refrigerator : LucideIcons.refrigerator,
-                      color: isSelected ? context.textColor : const Color(0xFF9CA3AF),
+                      color: isSelected ? context.textColor : context.hintTextColor,
                     ),
                     title: Text(f['name']?.toString() ?? '',
                         style: TextStyle(
@@ -111,7 +111,7 @@ class _FridgeSwitcherSheet extends StatelessWidget {
                 }),
               const Divider(height: 1),
               ListTile(
-                leading: const Icon(Icons.settings_outlined, color: Color(0xFF6B7280)),
+                leading: Icon(Icons.settings_outlined, color: context.subTextColor),
                 title: const Text('냉장고 관리',
                     style: TextStyle(fontWeight: FontWeight.w600)),
                 onTap: () {

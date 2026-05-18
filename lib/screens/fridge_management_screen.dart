@@ -139,7 +139,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${f['name']}', style: const TextStyle(color: Color(0xFF6B7280))),
+            Text('${f['name']}', style: TextStyle(color: dialogCtx.subTextColor)),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -151,8 +151,8 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                   style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w700, letterSpacing: 4)),
             ),
             const SizedBox(height: 12),
-            const Text('24시간 동안 유효. 가족에게 코드를 알려주세요.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+            Text('24시간 동안 유효. 가족에게 코드를 알려주세요.',
+                style: TextStyle(fontSize: 12, color: dialogCtx.subTextColor),
                 textAlign: TextAlign.center),
           ],
         ),
@@ -296,7 +296,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                           label: const Text('냉장고 만들기'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: context.accentColor,
-                            foregroundColor: Colors.black,
+                            foregroundColor: context.onAccent,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             textStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -361,16 +361,16 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                     const SizedBox(height: 2),
                     Row(
                       children: [
-                        const Icon(Icons.group_outlined, size: 12, color: Color(0xFF9CA3AF)),
+                        Icon(Icons.group_outlined, size: 12, color: context.hintTextColor),
                         const SizedBox(width: 4),
                         Text('멤버 ${members.length}명',
-                            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                            style: TextStyle(fontSize: 11, color: context.subTextColor)),
                       ],
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+              Icon(Icons.chevron_right, color: context.hintTextColor),
             ],
           ),
         ),
@@ -421,7 +421,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD1D5DB),
+                        color: ctx.hintTextColor,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -448,12 +448,12 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
                                 const SizedBox(height: 2),
                                 Text('멤버 ${members.length}명과 함께 사용',
-                                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                                    style: TextStyle(fontSize: 12, color: ctx.subTextColor)),
                               ],
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.close, color: Color(0xFF9CA3AF)),
+                            icon: Icon(Icons.close, color: ctx.hintTextColor),
                             onPressed: () => Navigator.of(sheetCtx).pop(),
                           ),
                         ],
@@ -478,7 +478,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                               label: const Text('초대 코드 발급'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: context.accentColor,
-                                foregroundColor: Colors.black,
+                                foregroundColor: context.onAccent,
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                 textStyle: const TextStyle(fontWeight: FontWeight.w600),
@@ -486,9 +486,9 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          const Text(
+                          Text(
                             '6자리 코드를 발급해서 가족에게 알려주면 같은 냉장고를 함께 관리할 수 있어요.',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
+                            style: TextStyle(fontSize: 11, color: ctx.subTextColor),
                           ),
                           const SizedBox(height: 24),
 
@@ -551,7 +551,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
             width: 28,
             height: 28,
             decoration: BoxDecoration(color: context.surfaceBg, borderRadius: BorderRadius.circular(20)),
-            child: const Icon(Icons.person_outline, size: 16, color: Color(0xFF6B7280)),
+            child: Icon(Icons.person_outline, size: 16, color: context.subTextColor),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -562,7 +562,7 @@ class _FridgeManagementScreenState extends State<FridgeManagementScreen> {
                 Text(m['name']?.toString() ?? m['username']?.toString() ?? '',
                     style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
                 Text(m['username']?.toString() ?? '',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF9CA3AF))),
+                    style: TextStyle(fontSize: 11, color: context.hintTextColor)),
               ],
             ),
           ),

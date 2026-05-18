@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/notification_service.dart';
 import '../state/notification_settings.dart';
+import '../utils/theme_colors.dart';
 
 // 프로필 화면에 들어가는 알림 설정 섹션.
 // 마스터/유통기한/식단 토글 + 식사 시간 3개. 변경 시 NotificationService에 재스케줄 요청.
@@ -15,18 +16,23 @@ class NotificationSettingsSection extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
+          color: context.cardBg,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
+          border: Border.all(color: context.borderColor),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.notifications_outlined, size: 18),
-                SizedBox(width: 8),
-                Text('알림 설정', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+              children: [
+                Icon(Icons.notifications_outlined,
+                    size: 18, color: context.textColor),
+                const SizedBox(width: 8),
+                Text('알림 설정',
+                    style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: context.textColor)),
               ],
             ),
             const SizedBox(height: 12),
@@ -35,6 +41,7 @@ class NotificationSettingsSection extends StatelessWidget {
               builder: (_, master, __) => Column(
                 children: [
                   _toggleRow(
+                    context: context,
                     title: '전체 알림',
                     subtitle: '모든 알림을 한 번에 켜고 끌 수 있어요',
                     value: master,
@@ -52,6 +59,7 @@ class NotificationSettingsSection extends StatelessWidget {
                   ValueListenableBuilder<bool>(
                     valueListenable: NotificationSettings.expiryEnabled,
                     builder: (_, expiry, __) => _toggleRow(
+                      context: context,
                       title: '유통기한 임박 알림',
                       subtitle: '매일 오전 9시 · 임박 식재료 안내',
                       value: expiry,
@@ -69,6 +77,7 @@ class NotificationSettingsSection extends StatelessWidget {
                     builder: (_, meal, __) => Column(
                       children: [
                         _toggleRow(
+                          context: context,
                           title: '식단 추천 알림',
                           subtitle: '각 식사 10분 전에 추천 식단 안내',
                           value: meal,
@@ -112,6 +121,7 @@ class NotificationSettingsSection extends StatelessWidget {
   }
 
   Widget _toggleRow({
+    required BuildContext context,
     required String title,
     required String subtitle,
     required bool value,
@@ -126,9 +136,15 @@ class NotificationSettingsSection extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(title,
+                    style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: context.textColor)),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+                Text(subtitle,
+                    style: TextStyle(
+                        fontSize: 11, color: context.subTextColor)),
               ],
             ),
           ),
@@ -171,15 +187,18 @@ class NotificationSettingsSection extends StatelessWidget {
               SizedBox(
                 width: 40,
                 child: Text(label,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF6B7280))),
+                    style: TextStyle(fontSize: 12, color: context.subTextColor)),
               ),
               Expanded(
                 child: Text(
                   time.format(context),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: context.textColor),
                 ),
               ),
-              const Icon(Icons.access_time, size: 16, color: Color(0xFF9CA3AF)),
+              Icon(Icons.access_time, size: 16, color: context.subTextColor),
             ],
           ),
         ),
