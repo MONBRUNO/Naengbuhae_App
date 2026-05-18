@@ -12,9 +12,9 @@ import 'guest_mode.dart';
 class FridgeContext {
   static const _kSelectedFridgeIdKey = 'selected_fridge_id';
 
-  // 게스트 모드에서 쓰는 단일 가상 냉장고. fridgeId는 -1 (서버 id와 절대 충돌하지 않음).
+  // 게스트 모드에서 쓰는 단일 가상 냉장고. id는 'guest' (서버 UUID와 절대 충돌하지 않음).
   static const Map<String, dynamic> _guestFridge = {
-    'id': -1,
+    'id': 'guest',
     'name': '내 냉장고',
     'isOwner': true,
     'members': [],
@@ -28,7 +28,8 @@ class FridgeContext {
   static final ValueNotifier<Map<String, dynamic>?> selected =
       ValueNotifier<Map<String, dynamic>?>(null);
 
-  static int? get selectedId => selected.value?['id'] as int?;
+  // 백엔드 Fridge가 UUID로 마이그레이션됨 — id는 문자열.
+  static String? get selectedId => selected.value?['id'] as String?;
 
   // 앱 시작 시 한 번 호출 (로그인 후 MainScaffold initState 등).
   static Future<void> load() async {
@@ -46,7 +47,13 @@ class FridgeContext {
 
       // 이전에 선택했던 냉장고 복원 (있으면), 없으면 첫 번째
       final prefs = await SharedPreferences.getInstance();
-      final savedId = prefs.getInt(_kSelectedFridgeIdKey);
+      // 과거 int(Long) id 시절 저장값이 남아있을 수 있어 getString 실패 시 정리.
+      String? savedId;
+      try {
+        savedId = prefs.getString(_kSelectedFridgeIdKey);
+      } catch (_) {
+        await prefs.remove(_kSelectedFridgeIdKey);
+      }
       Map<String, dynamic>? toSelect;
       if (savedId != null) {
         toSelect = list.where((f) => f['id'] == savedId).firstOrNull;
@@ -62,9 +69,9 @@ class FridgeContext {
   static Future<void> select(Map<String, dynamic> fridge) async {
     selected.value = fridge;
     final id = fridge['id'];
-    if (id is int) {
+    if (id is String) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_kSelectedFridgeIdKey, id);
+      await prefs.setString(_kSelectedFridgeIdKey, id);
     }
   }
 

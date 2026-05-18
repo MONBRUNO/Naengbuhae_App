@@ -19,7 +19,7 @@ class IngredientRepo {
 
   static http.Response _notFound() => http.Response('not found', 404);
 
-  static Future<http.Response> list({int? fridgeId}) async {
+  static Future<http.Response> list({String? fridgeId}) async {
     if (await GuestMode.isGuest()) {
       final items = await LocalIngredientStore.list();
       return _ok(items);
