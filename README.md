@@ -9,25 +9,59 @@
 
 ## 🆕 이번 작업 정리 (2026-05-18)
 
-### 디자인 / 색상
+### 버그 / 안정성
 
-**프로필 "맞춤 기능" 아이콘 색 복구**
-- 다크모드 적용 시 4개 카드 아이콘을 전부 `skyAccent`로 통일했던 걸 웹과 동일한 distinct 색으로 되돌림
-- `profile_screen.dart` — 맞춤 레시피=`accentColor`, 식단 계획=`#3B82F6`(blue-500), 소비 우선순위=`#F97316`(orange-500), 영양 분석=`#22C55E`(green-500)
-- 대시보드 기능 카드는 원래 distinct 색이라 변경 없음
+**Fridge UUID 마이그레이션 대응 (서버 연결 크래시 수정)**
+- 백엔드가 Fridge id를 Long→UUID(문자열)로 마이그레이션(IDOR 방어). 앱이 id를 `as int?`로 캐스팅해 `String is not a subtype of int?` 런타임 크래시
+- `fridge_context.dart`: `selectedId` getter `int?`→`String?`, 게스트 id `-1`→`'guest'`, 선택 저장 `getInt/setInt`→`getString/setString`, 과거 int 저장값 마이그레이션 가드
+- `ingredient_repo.dart`: `list({int? fridgeId})`→`{String? fridgeId}`
+- 나머지 소비처는 URL 보간/JSON/문자열 비교라 타입만 맞으면 동작
+
+### 다크모드 / 디자인 (웹 토큰 전면 통일)
+
+**전수 토큰 스윕**
+- 위젯이 색을 하드코딩해 다크가 깨지던 것(흰 카드/빨강글씨/쨍한 그라데이션)을 `theme_colors` 토큰으로 일괄 전환 — 웹 시맨틱 토큰 방식과 동일 (13파일 89건)
+- 회색텍스트→`subText/hintText`, 보더→`borderColor`, 밝은배경→`cardBg`, accent 위 글자→`onAccent`. 브랜드색/이미지 오버레이/이미 분기된 상태색/차트색은 보존
+
+**컴포넌트별 웹 스펙 정렬**
+- 알림설정 카드: 하드코딩 흰색 → `cardBg/borderColor/textColor` (눈부심 해결)
+- 알레르기 주의: 다크에서 빨강 배경+빨강 글씨 → 밝은 레드 분기 (`profile`/`nutrition`/`recipe_detail` 3곳)
+- 홈 식재료 상태 카드 & 레시피/식단 추천 버튼: 보라 그라데이션/색박스 → `cardBg`+`borderColor`, 아이콘 sky/blue (웹 Home과 동일)
+- 일일 권장 칼로리: `Colors.black`(다크서 안보임) → 웹 `bg-foreground text-background`(크림 카드)
+- 알림 배너(홈/우선순위): 새빨간 블록 → 다크 카드 + 4px 컬러 좌측바 + 컬러 아이콘
+- 우선순위 위험/주의/안전 pill: 진한 단색 → status색 12% 옅은 틴트
+- 나의맞춤 프로필 카드: 웹 `gray-800→900` 그라데이션, 아바타 `skyAccent`+흰 아이콘, 스탯박스 `boxBg`
+- 맞춤기능 아이콘 색 복구(레시피=accent, 식단=blue, 우선순위=orange, 영양=green)
+
+**레이아웃 이동**
+- 알림 설정: 중간 인라인 제거 → 헤더 로그아웃 왼쪽 알림 아이콘 → 바텀시트
+- 테마 선택: 권장 영양소 비율 아래로 (웹과 동일 순서)
+
+### 폰트
+
+**Pretendard 전역 적용**
+- `assets/fonts/`에 Pretendard 1.3.9 static OTF 4 weight(Regular/Medium/SemiBold/Bold) + `pubspec.yaml` fonts 블록
+- `main.dart` 라이트/다크 ThemeData `fontFamily: 'Pretendard'` (OFL 라이선스, 디버그 빌드 검증)
+
+### 브랜드 / 로고
+
+**로그인 화면 로고**
+- `assets/brand/logo_full.png`(아이콘+워드마크 락업), `logo_icon.png`(아이콘 단독) — 투명 배경본
+- 로그인 화면: "스마트 냉장고" 텍스트 → 풀 로고. 폼 너비 꽉 채움(`BoxFit.contain`)
 
 ### 계정 관리
 
 **비밀번호 변경 위치 이동**
-- `profile_screen.dart` 계정 관리(회원 탈퇴 위) → 회원 카드 탭 시 열리는 `ProfileEditScreen`(프로필 수정) 하단으로 이동
-- `profile['provider'] == 'LOCAL'`일 때만 노출 (조건 그대로)
-- `change_password_screen.dart` import: profile_screen에서 제거, profile_edit_screen에 추가
-- profile_screen 계정 관리 영역엔 이제 **회원 탈퇴만** 남음
+- 계정 관리(회원 탈퇴 위) → 회원 카드 탭 시 `ProfileEditScreen` 하단으로. `provider == 'LOCAL'`만 노출. profile_screen엔 회원 탈퇴만 남음
 
 ### 빌드
 
 **FCM google-services 플러그인 조건부 적용**
-- `android/app/build.gradle.kts` — `google-services.json`이 있을 때만 플러그인 적용. 파일 없어도 빌드 진행(알림은 로컬만 동작)
+- `android/app/build.gradle.kts` — `google-services.json` 있을 때만 적용. 없어도 빌드 진행(알림 로컬만)
+
+### 기타
+
+- 기본 테마 = 라이트 확인 (`theme_mode_pref.dart` 저장값 없으면 light, `main.dart` notifier 바인딩)
 
 ---
 
