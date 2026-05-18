@@ -157,15 +157,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: isDark
-              ? const [Color(0xFF3B0764), Color(0xFF500724)] // purple-950, pink-950
-              : const [Color(0xFFFAF5FF), Color(0xFFFDF2F8)], // purple-50 → pink-50
-        ),
+        color: context.cardBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: isDark ? const Color(0xFF6B21A8) : const Color(0xFFE9D5FF)),
+        border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,14 +171,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('식재료 상태', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                    Text('식재료 상태',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: context.textColor)),
                     const SizedBox(height: 2),
                     Text('현재 냉장고 상태를 확인하세요',
                         style: TextStyle(fontSize: 11, color: context.subTextColor)),
                   ],
                 ),
               ),
-              const Icon(Icons.trending_up, color: Color(0xFF9333EA), size: 20), // purple-600
+              Icon(Icons.trending_up, color: context.skyAccent, size: 20),
             ],
           ),
           const SizedBox(height: 16),
@@ -257,13 +255,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _featureGrid() {
-    final isDark = context.isDark;
+    // 웹 Home과 통일: card+border 카드, 레시피=sky 액센트 / 식단=blue-500
     return Row(
       children: [
         Expanded(child: _featureCard('레시피 추천', LucideIcons.chefHat,
-            isDark ? const Color(0xFF431407) : const Color(0xFFFFF7ED),
-            isDark ? const Color(0xFF9A3412) : const Color(0xFFFED7AA),
-            const Color(0xFFEA580C), () {
+            context.cardBg, context.borderColor, context.skyAccent, () {
           if (GuestMode.currentlyGuest) {
             LoginRequired.show(context, featureName: '레시피 추천');
             return;
@@ -272,9 +268,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         })),
         const SizedBox(width: 12),
         Expanded(child: _featureCard('식단 추천', LucideIcons.calendar,
-            isDark ? const Color(0xFF052E16) : const Color(0xFFF0FDF4),
-            isDark ? const Color(0xFF166534) : const Color(0xFFBBF7D0),
-            const Color(0xFF16A34A), () {
+            context.cardBg, context.borderColor, const Color(0xFF3B82F6), () {
           if (GuestMode.currentlyGuest) {
             LoginRequired.show(context, featureName: '식단 추천');
             return;
@@ -301,7 +295,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Icon(icon, color: iconColor, size: 22),
             const SizedBox(width: 10),
-            Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(title,
+                style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: context.textColor)),
           ],
         ),
       ),
