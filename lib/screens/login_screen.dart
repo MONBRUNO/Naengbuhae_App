@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:simple_icons/simple_icons.dart';
 
 import '../api/api_client.dart';
 import '../api/auth_storage.dart';
@@ -138,38 +139,46 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(_submitting ? '로그인 중...' : '로그인'),
                   ),
                   const SizedBox(height: 12),
-                  // 비로그인 진입 — 회원가입만 있는 줄 알고 이탈하지 않도록 로그인 버튼 바로 아래에 배치
+                  // 비로그인 진입 + 비번 찾기 — 한 줄에 묶어 깔끔하게 (밑줄 제거, · 구분)
                   Center(
-                    child: TextButton(
-                      onPressed: _startAsGuest,
-                      child: const Text(
-                        '로그인 없이 둘러보기',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: Color(0xFF6B7280),
-                          decoration: TextDecoration.underline,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton(
+                          onPressed: _startAsGuest,
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: const Color(0xFF6B7280),
+                          ),
+                          child: const Text('로그인 없이 둘러보기',
+                              style: TextStyle(fontSize: 13)),
                         ),
-                      ),
+                        Container(
+                            width: 1,
+                            height: 11,
+                            color: const Color(0xFFD1D5DB)),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen()),
+                          ),
+                          style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            foregroundColor: const Color(0xFF6B7280),
+                          ),
+                          child: const Text('비밀번호 찾기',
+                              style: TextStyle(fontSize: 13)),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  // 비밀번호 잊은 사용자용 — 메일로 재설정 링크 받기
-                  Center(
-                    child: GestureDetector(
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
-                      ),
-                      child: const Text(
-                        '비밀번호 잊으셨나요?',
-                        style: TextStyle(
-                          color: Color(0xFF6B7280),
-                          fontSize: 13,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -186,33 +195,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       _socialIcon(
                         provider: 'kakao',
                         bg: const Color(0xFFFEE500),
-                        child: const Icon(Icons.chat_bubble,
-                            color: Colors.black, size: 24),
+                        // 동그란 카카오 로고가 버튼 원을 꽉 채움 (full-bleed)
+                        child: _brandChild(
+                          asset: 'assets/social/kakao.png',
+                          size: 56,
+                          fallback: const Icon(SimpleIcons.kakaotalk,
+                              color: Colors.black, size: 26),
+                        ),
                       ),
                       const SizedBox(width: 20),
                       _socialIcon(
                         provider: 'naver',
                         bg: const Color(0xFF03C75A),
-                        child: const Text('N',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800)),
+                        // 네이버는 익숙한 N 마크라 simple_icons 글리프 그대로 사용
+                        child: const Icon(SimpleIcons.naver,
+                            color: Colors.white, size: 20),
                       ),
                       const SizedBox(width: 20),
+                      // 구글 가이드라인: 4색 G는 흰 배경에 변형 없이 — 다크에서도 흰 원 유지
                       _socialIcon(
                         provider: 'google',
-                        bg: context.isDark
-                            ? const Color(0xFF374151)
-                            : Colors.white,
+                        bg: Colors.white,
                         border: true,
-                        child: Text('G',
-                            style: TextStyle(
-                                color: context.isDark
-                                    ? Colors.white
-                                    : Colors.black,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w800)),
+                        child: _brandChild(
+                          asset: 'assets/social/google.png',
+                          size: 24,
+                          fallback: const Icon(SimpleIcons.google,
+                              color: Color(0xFF4285F4), size: 24),
+                        ),
                       ),
                     ],
                   ),
@@ -233,9 +243,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: Text('회원가입',
                             style: TextStyle(
-                              color: context.textColor,
+                              color: context.skyAccent,
                               fontWeight: FontWeight.w700,
-                              decoration: TextDecoration.underline,
                             )),
                       ),
                     ],
@@ -279,6 +288,21 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // 간편 로그인: 전폭 버튼 대신 원형 아이콘 한 줄 (스크롤 없이 한 화면에)
+  // 공식 브랜드 에셋(assets/social/*.png) 우선 사용.
+  // 파일이 아직 없으면 simple_icons 글리프로 대체 (각 사 공식 에셋 받아 넣으면 자동 적용).
+  Widget _brandChild({
+    required String asset,
+    required double size,
+    required Widget fallback,
+  }) {
+    return Image.asset(
+      asset,
+      width: size,
+      height: size,
+      errorBuilder: (_, _, _) => fallback,
+    );
+  }
+
   Widget _socialIcon({
     required String provider,
     required Color bg,
@@ -290,6 +314,7 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Container(
         width: 56,
         height: 56,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: bg,
           shape: BoxShape.circle,

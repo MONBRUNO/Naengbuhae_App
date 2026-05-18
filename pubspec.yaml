@@ -49,6 +49,7 @@ dependencies:
 
   # OAuth 소셜 로그인 — 백엔드 /oauth2/authorization/{provider} WebView로 진행
   webview_flutter: ^4.10.0
+  simple_icons: ^14.6.1
 
 dev_dependencies:
   flutter_test:
@@ -71,6 +72,9 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    - assets/social/
 
   # To add assets to your application, add an assets section, like this:
   # assets:
