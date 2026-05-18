@@ -555,8 +555,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
+                  // 웹: dark:from-gray-800 to-gray-900 (#1F2937 → #111827)
                   colors: context.isDark
-                      ? const [Color(0xFF191C20), Color(0xFF23272D)]
+                      ? const [Color(0xFF1F2937), Color(0xFF111827)]
                       : const [Color(0xFFF9FAFB), Colors.white],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -579,8 +580,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           Container(
                             width: 48,
                             height: 48,
-                            decoration: BoxDecoration(color: context.accentColor, shape: BoxShape.circle),
-                            child: const Icon(Icons.person, size: 24, color: Colors.black),
+                            decoration: BoxDecoration(color: context.skyAccent, shape: BoxShape.circle),
+                            child: const Icon(Icons.person, size: 24, color: Colors.white),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -588,18 +589,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(p['name']?.toString() ?? '',
-                                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                                    style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                        color: context.textColor)),
                                 const SizedBox(height: 2),
                                 Text(
                                   age != null && p['gender'] != null
                                       ? '${age}세 · ${p['gender'] == '남' ? '남성' : p['gender'] == '여' ? '여성' : p['gender']}'
                                       : '프로필 정보를 완성해주세요',
-                                  style: const TextStyle(fontSize: 13, color: Color(0xFF6B7280)),
+                                  style: TextStyle(
+                                      fontSize: 13, color: context.subTextColor),
                                 ),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: Color(0xFF9CA3AF)),
+                          Icon(Icons.chevron_right, color: context.subTextColor),
                         ],
                       ),
                     ),
@@ -1017,14 +1022,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: context.surfaceBg,
+        color: context.boxBg,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: context.borderColor),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280))),
+          Text(label, style: TextStyle(fontSize: 11, color: context.subTextColor)),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(
             fontSize: 16,
