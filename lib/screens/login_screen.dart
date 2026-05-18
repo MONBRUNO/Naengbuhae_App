@@ -109,13 +109,13 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 12),
                   const Text('스마트 냉장고',
                       style: TextStyle(fontSize: 30, fontWeight: FontWeight.w700)),
                   const SizedBox(height: 8),
                   const Text('신선한 식재료 관리의 시작',
                       style: TextStyle(fontSize: 14, color: Colors.grey)),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 28),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
@@ -180,18 +180,41 @@ class _LoginScreenState extends State<LoginScreen> {
                     const Expanded(child: Divider()),
                   ]),
                   const SizedBox(height: 16),
-                  _socialButton('카카오로 시작하기', const Color(0xFFFEE500), Colors.black,
-                      provider: 'kakao'),
-                  const SizedBox(height: 8),
-                  _socialButton('네이버로 시작하기', const Color(0xFF03C75A), Colors.white,
-                      provider: 'naver'),
-                  const SizedBox(height: 8),
-                  _socialButton(
-                    '구글로 시작하기',
-                    context.isDark ? const Color(0xFF374151) : Colors.white,
-                    context.isDark ? Colors.white : Colors.black,
-                    border: true,
-                    provider: 'google',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _socialIcon(
+                        provider: 'kakao',
+                        bg: const Color(0xFFFEE500),
+                        child: const Icon(Icons.chat_bubble,
+                            color: Colors.black, size: 24),
+                      ),
+                      const SizedBox(width: 20),
+                      _socialIcon(
+                        provider: 'naver',
+                        bg: const Color(0xFF03C75A),
+                        child: const Text('N',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800)),
+                      ),
+                      const SizedBox(width: 20),
+                      _socialIcon(
+                        provider: 'google',
+                        bg: context.isDark
+                            ? const Color(0xFF374151)
+                            : Colors.white,
+                        border: true,
+                        child: Text('G',
+                            style: TextStyle(
+                                color: context.isDark
+                                    ? Colors.white
+                                    : Colors.black,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800)),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 24),
                   Row(
@@ -255,25 +278,26 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _socialButton(
-    String label,
-    Color bg,
-    Color fg, {
-    bool border = false,
+  // 간편 로그인: 전폭 버튼 대신 원형 아이콘 한 줄 (스크롤 없이 한 화면에)
+  Widget _socialIcon({
     required String provider,
+    required Color bg,
+    required Widget child,
+    bool border = false,
   }) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: () => _socialLogin(provider),
-        style: OutlinedButton.styleFrom(
-          backgroundColor: bg,
-          foregroundColor: fg,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          side: border ? const BorderSide(color: Color(0xFFE0E0E0), width: 2) : BorderSide.none,
+    return GestureDetector(
+      onTap: () => _socialLogin(provider),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: bg,
+          shape: BoxShape.circle,
+          border: border
+              ? Border.all(color: const Color(0xFFE0E0E0), width: 2)
+              : null,
         ),
-        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+        child: Center(child: child),
       ),
     );
   }
