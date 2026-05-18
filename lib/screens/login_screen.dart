@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   // 브랜드 로고 (배경 투명 PNG — 다크/라이트 모두 자연스럽게)
                   Center(
                     child: Image.asset('assets/brand/logo_full.png',
-                        height: 130),
+                        height: 190),
                   ),
                   const SizedBox(height: 28),
                   _textField(
