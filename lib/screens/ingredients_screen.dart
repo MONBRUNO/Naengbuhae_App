@@ -19,6 +19,38 @@ const _categories = ['전체', '채소', '육류', '유제품', '곡물', '해�
     '가공식품', '음료', '조미료', '간식', '기타'];
 const _storages = ['전체', '냉장', '냉동', '실온'];
 
+// 식재료별 영양정보 (100g 기준) — 웹 Ingredients.tsx의 nutritionDatabase와 동일 셋.
+// 카드/상세 sheet에서 사용량(quantity) 비례로 환산해 표시.
+const Map<String, Map<String, double>> _nutritionDb = {
+  '당근':    {'calories': 41,  'protein': 0.9,  'carbs': 9.6,  'fat': 0.2},
+  '양파':    {'calories': 40,  'protein': 1.1,  'carbs': 9.3,  'fat': 0.1},
+  '토마토':  {'calories': 18,  'protein': 0.9,  'carbs': 3.9,  'fat': 0.2},
+  '배추':    {'calories': 13,  'protein': 1.2,  'carbs': 2.2,  'fat': 0.2},
+  '브로콜리': {'calories': 34,  'protein': 2.8,  'carbs': 6.6,  'fat': 0.4},
+  '시금치':  {'calories': 23,  'protein': 2.9,  'carbs': 3.6,  'fat': 0.4},
+  '돼지고기': {'calories': 242, 'protein': 27.3, 'carbs': 0,    'fat': 14.0},
+  '소고기':  {'calories': 250, 'protein': 26.1, 'carbs': 0,    'fat': 15.4},
+  '닭고기':  {'calories': 165, 'protein': 31.0, 'carbs': 0,    'fat': 3.6},
+  '닭가슴살': {'calories': 165, 'protein': 31.0, 'carbs': 0,    'fat': 3.6},
+  '고등어':  {'calories': 205, 'protein': 18.6, 'carbs': 0,    'fat': 13.9},
+  '연어':    {'calories': 208, 'protein': 20.4, 'carbs': 0,    'fat': 13.4},
+  '새우':    {'calories': 99,  'protein': 20.9, 'carbs': 0.9,  'fat': 1.7},
+  '우유':    {'calories': 61,  'protein': 3.2,  'carbs': 4.8,  'fat': 3.3},
+  '요구르트': {'calories': 59,  'protein': 3.5,  'carbs': 4.7,  'fat': 3.3},
+  '치즈':    {'calories': 402, 'protein': 25.0, 'carbs': 1.3,  'fat': 33.1},
+  '사과':    {'calories': 52,  'protein': 0.3,  'carbs': 13.8, 'fat': 0.2},
+  '바나나':  {'calories': 89,  'protein': 1.1,  'carbs': 22.8, 'fat': 0.3},
+  '딸기':    {'calories': 32,  'protein': 0.7,  'carbs': 7.7,  'fat': 0.3},
+  '쌀':     {'calories': 130, 'protein': 2.7,  'carbs': 28.2, 'fat': 0.3},
+  '현미':    {'calories': 111, 'protein': 2.6,  'carbs': 23.5, 'fat': 0.9},
+  '귀리':    {'calories': 389, 'protein': 16.9, 'carbs': 66.3, 'fat': 6.9},
+  '식빵':    {'calories': 265, 'protein': 8.7,  'carbs': 49.4, 'fat': 3.2},
+  'default': {'calories': 150, 'protein': 5,    'carbs': 20,   'fat': 3},
+};
+
+Map<String, double> _nutritionOf(String name) =>
+    _nutritionDb[name] ?? _nutritionDb['default']!;
+
 enum _SortBy { expiry, name, category }
 
 // 웹의 Ingredients.tsx에 대응. 필터(분류/보관) + 정렬 + 카드 목록.
@@ -515,7 +547,18 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(children: list.map(_ingredientCard).toList()),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: list.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  mainAxisExtent: 168,
+                ),
+                itemBuilder: (_, i) => _ingredientCard(list[i]),
+              ),
             ),
         ],
       ),
@@ -530,6 +573,8 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
       );
 
+  // 2열 그리드용 컴팩트 카드. 탭 → bottom sheet 상세. 선택 모드면 토글.
+  // 웹 Ingredients.tsx `grid grid-cols-2 gap-3`와 동일 패턴 (팀원 디자인 적용).
   Widget _ingredientCard(Map<String, dynamic> item) {
     final days = calculateDDay(item['expirationDate']?.toString());
     final s = getExpiryStatus(days);
@@ -538,186 +583,370 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final id = item['id'] as int;
     final isSelected = _selectedIds.contains(id);
 
-    final innerCard = InkWell(
+    final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+    final n = _nutritionOf(item['name']?.toString() ?? '');
+    final factor = qty / 100;
+
+    return InkWell(
       borderRadius: BorderRadius.circular(12),
-      onTap: () async {
+      onTap: () {
         if (_selectionMode) {
           _toggleSelection(id);
-          return;
+        } else {
+          _showDetailSheet(item);
         }
-        final updated = await Navigator.of(context).push<bool>(
-          MaterialPageRoute(builder: (_) => IngredientEditScreen(existing: item)),
-        );
-        if (updated == true) _fetch();
       },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: _selectionMode && isSelected
-              ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB)) // 선택된 카드 = 연두
-              : context.cardBg,
-          borderRadius: BorderRadius.circular(12),
-          border: _selectionMode && isSelected
-              ? Border.all(color: _accentGreen, width: 2)
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _selectionMode && isSelected
+                  ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB))
+                  : context.cardBg,
+              borderRadius: BorderRadius.circular(12),
+              border: _selectionMode && isSelected
+                  ? Border.all(color: _accentGreen, width: 2)
+                  : null,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_selectionMode) ...[
-                  Icon(
-                    isSelected ? Icons.check_box : Icons.check_box_outline_blank,
-                    color: isSelected ? context.textColor : context.hintTextColor,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 10),
-                ],
-                Expanded(
-                  child: Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      Text(item['name']?.toString() ?? '',
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                Text(item['name']?.toString() ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: c.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(formatDDay(days),
+                          style: TextStyle(color: c, fontSize: 10, fontWeight: FontWeight.w600)),
+                    ),
+                    if (warnings.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                         decoration: BoxDecoration(
-                          color: c.withValues(alpha: 0.15),
+                          color: context.isDark ? const Color(0xFF450A0A) : Colors.red.shade100,
                           borderRadius: BorderRadius.circular(4),
                         ),
-                        child: Text(formatDDay(days),
-                            style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.w600)),
+                        child: const Icon(Icons.warning_amber, size: 12, color: Colors.red),
                       ),
-                      if (warnings.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: context.isDark ? const Color(0xFF450A0A) : Colors.red.shade100,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.warning_amber, size: 12, color: Colors.red),
-                              const SizedBox(width: 2),
-                              Text('알레르기 ${warnings.join(", ")}',
-                                  style: TextStyle(
-                                      color: Colors.red.shade700, fontSize: 11, fontWeight: FontWeight.w600)),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
+                  ],
                 ),
-                if (!_selectionMode)
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, size: 20, color: context.subTextColor),
-                    onPressed: () => _delete(item),
-                  ),
+                const SizedBox(height: 6),
+                Text(item['expirationDate']?.toString() ?? '',
+                    style: TextStyle(fontSize: 11, color: context.subTextColor)),
+                const Spacer(),
+                Wrap(
+                  spacing: 4,
+                  runSpacing: 4,
+                  children: [
+                    _miniChip('${(n['calories']! * factor).round()}kcal'),
+                    _miniChip('단${(n['protein']! * factor).round()}g'),
+                    _miniChip('탄${(n['carbs']! * factor).round()}g'),
+                  ],
+                ),
               ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              '${item['quantity']}${item['unit']} · ${item['category']} · ${item['storage']}',
-              style: TextStyle(fontSize: 12, color: context.subTextColor),
-            ),
-            Text(
-              '유통기한: ${item['expirationDate']}',
-              style: TextStyle(fontSize: 12, color: context.subTextColor),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    // 선택 모드에선 스와이프 비활성화 — 카드 탭으로 토글하는 흐름과 충돌 방지.
-    if (_selectionMode) {
-      return Container(margin: const EdgeInsets.only(bottom: 8), child: innerCard);
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Dismissible(
-        key: ValueKey('ing-$id'),
-        background: _swipeRightBg(),     // 오른쪽으로 스와이프 → 좌측에 보이는 배경 = 수정
-        secondaryBackground: _swipeLeftBg(), // 왼쪽으로 스와이프 → 우측에 보이는 배경 = 소비(삭제)
-        confirmDismiss: (direction) async {
-          if (direction == DismissDirection.endToStart) {
-            // 왼쪽 스와이프 = 소비/삭제. 확인 후 API 호출. 성공 시 true 반환해 카드 제거.
-            final ok = await showDialog<bool>(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: const Text('소비했나요?'),
-                content: Text('${item['name']}을(를) 냉장고에서 비울게요.'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
-                  TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('소비')),
-                ],
-              ),
-            );
-            if (ok != true) return false;
-            final res = await IngredientRepo.delete(id);
-            if (res.statusCode == 200) {
-              _fetch();
-              return true;
-            }
-            if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('삭제 실패 (${res.statusCode})')));
-            }
-            return false;
-          } else {
-            // 오른쪽 스와이프 = 수정 화면으로 이동. 카드는 유지.
-            final updated = await Navigator.of(context).push<bool>(
-              MaterialPageRoute(builder: (_) => IngredientEditScreen(existing: item)),
-            );
-            if (updated == true) _fetch();
-            return false;
-          }
-        },
-        child: innerCard,
-      ),
-    );
-  }
-
-  // 좌측 배경 (오른쪽으로 스와이프 시 노출) — 수정 의미
-  Widget _swipeRightBg() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF3B82F6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.edit, color: Colors.white, size: 22),
-          SizedBox(width: 8),
-          Text('수정', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          ),
+          // 우상단 — 선택 모드면 체크박스, 아니면 삭제 버튼.
+          Positioned(
+            top: 4,
+            right: 4,
+            child: _selectionMode
+                ? Container(
+                    margin: const EdgeInsets.all(4),
+                    width: 20,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      color: isSelected ? _accentGreen : Colors.white,
+                      border: Border.all(
+                        color: isSelected ? _accentGreen : const Color(0xFFD1D5DB),
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: isSelected
+                        ? const Icon(Icons.check, size: 14, color: Colors.black)
+                        : null,
+                  )
+                : InkWell(
+                    onTap: () => _delete(item),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(Icons.delete_outline,
+                          size: 18, color: Colors.red.shade400),
+                    ),
+                  ),
+          ),
         ],
       ),
     );
   }
 
-  // 우측 배경 (왼쪽으로 스와이프 시 노출) — 소비/삭제 의미
-  Widget _swipeLeftBg() {
+  Widget _miniChip(String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: const Color(0xFFDC2626),
-        borderRadius: BorderRadius.circular(12),
+        color: context.boxBg,
+        borderRadius: BorderRadius.circular(4),
       ),
-      alignment: Alignment.centerRight,
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 10, color: context.textColor, fontWeight: FontWeight.w500)),
+    );
+  }
+
+  // 카드 탭 시 띄우는 상세 bottom sheet. 웹의 detailIngredient 모달과 동일 정보.
+  // 수정 버튼은 앱 고유(웹은 별도 흐름 없음) — 기존 IngredientEditScreen 진입.
+  Future<void> _showDetailSheet(Map<String, dynamic> item) async {
+    final days = calculateDDay(item['expirationDate']?.toString());
+    final s = getExpiryStatus(days);
+    final c = statusColor(s);
+    final warnings = (item['allergyWarnings'] as List?)?.cast<String>() ?? const [];
+    final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+    final n = _nutritionOf(item['name']?.toString() ?? '');
+    final factor = qty / 100;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.boxBg,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(sheetCtx).size.height * 0.85),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 핸들 바
+                Center(
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12, bottom: 4),
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: sheetCtx.surfaceBg,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                // 헤더
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 12, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(item['name']?.toString() ?? '',
+                            style: const TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.w700)),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(sheetCtx),
+                        icon: Icon(Icons.close, color: sheetCtx.subTextColor),
+                      ),
+                    ],
+                  ),
+                ),
+                // 상태 태그 + 알레르기
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: c.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(formatDDay(days),
+                            style: TextStyle(
+                                color: c, fontSize: 12, fontWeight: FontWeight.w600)),
+                      ),
+                      if (warnings.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: sheetCtx.isDark
+                                ? const Color(0xFF450A0A)
+                                : Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
+                            const Icon(Icons.warning_amber, size: 14, color: Colors.red),
+                            const SizedBox(width: 4),
+                            Text('알레르기 ${warnings.join(", ")}',
+                                style: TextStyle(
+                                    color: Colors.red.shade700,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600)),
+                          ]),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 정보 블록
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: sheetCtx.surfaceBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      children: [
+                        _infoRow(sheetCtx, '수량', '${item['quantity']}${item['unit']}'),
+                        _infoRow(sheetCtx, '분류', item['category']?.toString() ?? '-'),
+                        _infoRow(sheetCtx, '보관 방법', item['storage']?.toString() ?? '-'),
+                        _infoRow(sheetCtx, '유통기한',
+                            item['expirationDate']?.toString() ?? '-'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // 영양 정보 2x2
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: sheetCtx.surfaceBg,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('영양 정보 (${item['quantity']}${item['unit']} 기준)',
+                            style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: sheetCtx.subTextColor)),
+                        const SizedBox(height: 12),
+                        Row(children: [
+                          Expanded(
+                              child: _nutritionBox(sheetCtx,
+                                  '${(n['calories']! * factor).round()}', 'kcal')),
+                          const SizedBox(width: 8),
+                          Expanded(
+                              child: _nutritionBox(sheetCtx,
+                                  '${(n['protein']! * factor).round()}g', '단백질')),
+                        ]),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          Expanded(
+                              child: _nutritionBox(sheetCtx,
+                                  '${(n['carbs']! * factor).round()}g', '탄수화물')),
+                          const SizedBox(width: 8),
+                          Expanded(
+                              child: _nutritionBox(sheetCtx,
+                                  '${(n['fat']! * factor).round()}g', '지방')),
+                        ]),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // 수정 + 삭제
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            Navigator.pop(sheetCtx);
+                            final updated = await Navigator.of(context).push<bool>(
+                              MaterialPageRoute(
+                                  builder: (_) => IngredientEditScreen(existing: item)),
+                            );
+                            if (updated == true) _fetch();
+                          },
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text('수정'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.pop(sheetCtx);
+                            _delete(item);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: sheetCtx.isDark
+                                ? const Color(0xFF450A0A)
+                                : const Color(0xFFFEE2E2),
+                            foregroundColor: const Color(0xFFDC2626),
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('삭제'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(BuildContext ctx, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Text('소비', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-          SizedBox(width: 8),
-          Icon(Icons.check, color: Colors.white, size: 22),
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, color: ctx.subTextColor)),
+          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  Widget _nutritionBox(BuildContext ctx, String value, String label) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ctx.boxBg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          Text(label, style: TextStyle(fontSize: 11, color: ctx.subTextColor)),
         ],
       ),
     );
