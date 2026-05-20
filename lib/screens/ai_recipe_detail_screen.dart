@@ -1,33 +1,54 @@
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../state/ai_recipe_store.dart';
 import '../utils/theme_colors.dart';
 import 'shopping_screen.dart';
 
-// AI 추천 결과 단일 상세 — 기존 RecipeDetailScreen과 유사한 layout이지만 AI 응답 데이터(즉석) 기반.
-// AI 응답엔 quantity/unit/step 없어 일부 섹션만 표시. 장보기 일괄 추가 흐름 동일.
+// AI 추천 결과 단일 상세 — recipeId로 SharedPreferences에서 조회.
+// 즐겨찾기 토글 가능 (Heart 아이콘). 장보기 일괄 추가 흐름 동일.
 class AiRecipeDetailScreen extends StatefulWidget {
-  final Map<String, dynamic> recipe;
-  const AiRecipeDetailScreen({super.key, required this.recipe});
+  final String recipeId;
+  const AiRecipeDetailScreen({super.key, required this.recipeId});
 
   @override
   State<AiRecipeDetailScreen> createState() => _AiRecipeDetailScreenState();
 }
 
 class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
+  SavedAiRecipe? _recipe;
+  bool _loading = true;
   bool _adding = false;
 
-  // "신선한 채소 (루꼴라, 시금치 등): 활용법..." 같은 자유 형식 → ":" or "(" 앞부분.
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final rec = await AiRecipeStore.getOne(widget.recipeId);
+    setState(() {
+      _recipe = rec;
+      _loading = false;
+    });
+  }
+
   String _parseName(String text) => text.split(RegExp(r'[:\(（]'))[0].trim();
   String _parseDetail(String text) =>
       text.contains(':') ? text.substring(text.indexOf(':') + 1).trim() : '';
 
+  Future<void> _toggleFavorite() async {
+    final updated = await AiRecipeStore.toggleFavorite(widget.recipeId);
+    if (updated != null && mounted) {
+      setState(() => _recipe = updated);
+    }
+  }
+
   Future<void> _addToShopping() async {
-    if (_adding) return;
-    final additional =
-        (widget.recipe['additional_ingredients'] as List?)?.cast<String>() ??
-            const [];
-    final items = additional
+    final rec = _recipe;
+    if (rec == null || _adding) return;
+    final items = rec.additionalIngredients
         .map(_parseName)
         .where((n) => n.isNotEmpty)
         .map((n) => {'name': n, 'quantity': 1, 'unit': '개'})
@@ -91,15 +112,44 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final rec = widget.recipe;
-    final additional =
-        (rec['additional_ingredients'] as List?)?.cast<String>() ?? const [];
-    final healthBenefits = rec['health_benefits']?.toString() ?? '';
-    final recipeTip = rec['recipe_tip']?.toString() ?? '';
+    if (_loading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    final rec = _recipe;
+    if (rec == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('AI 추천 레시피')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text('레시피 정보가 없습니다'),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('돌아가기'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(rec['dish_name']?.toString() ?? '레시피'),
+        title: Text(rec.dishName),
+        actions: [
+          IconButton(
+            tooltip: '즐겨찾기',
+            icon: Icon(
+              rec.favorite ? Icons.favorite : Icons.favorite_border,
+              color: rec.favorite ? Colors.red : null,
+            ),
+            onPressed: _toggleFavorite,
+          ),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -115,8 +165,7 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
             child: Row(
               children: [
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFCDFF00),
                     borderRadius: BorderRadius.circular(6),
@@ -124,8 +173,7 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                   child: const Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.auto_awesome,
-                          size: 14, color: Color(0xFF1A3300)),
+                      Icon(Icons.auto_awesome, size: 14, color: Color(0xFF1A3300)),
                       SizedBox(width: 4),
                       Text('AI 추천',
                           style: TextStyle(
@@ -138,21 +186,19 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('냉장고 식재료 기반으로 만든 맞춤 추천',
-                      style: TextStyle(
-                          fontSize: 12, color: context.subTextColor)),
+                      style: TextStyle(fontSize: 12, color: context.subTextColor)),
                 ),
               ],
             ),
           ),
 
           // 필요한 재료
-          if (additional.isNotEmpty) ...[
+          if (rec.additionalIngredients.isNotEmpty) ...[
             const SizedBox(height: 24),
             const Text('필요한 재료',
-                style:
-                    TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            ...additional.map((text) {
+            ...rec.additionalIngredients.map((text) {
               final name = _parseName(text);
               final detail = _parseDetail(text);
               return Container(
@@ -180,7 +226,7 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
               );
             }),
 
-            // 액션 버튼 — 재료 바로 밑 (RecipeDetailScreen과 동일 패턴)
+            // 액션 버튼 — 재료 바로 밑
             const SizedBox(height: 12),
             Row(
               children: [
@@ -191,7 +237,7 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                     label: Text(
                       _adding
                           ? '추가 중...'
-                          : '재료 ${additional.length}개 장보기에 추가',
+                          : '재료 ${rec.additionalIngredients.length}개 장보기에 추가',
                       style: const TextStyle(fontSize: 13),
                     ),
                     style: OutlinedButton.styleFrom(
@@ -224,17 +270,17 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
           ],
 
           // 효능 / 추천 이유
-          if (healthBenefits.isNotEmpty) ...[
+          if (rec.healthBenefits.isNotEmpty) ...[
             const SizedBox(height: 24),
             const Text('효능 / 추천 이유',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(healthBenefits,
+            Text(rec.healthBenefits,
                 style: const TextStyle(fontSize: 14, height: 1.5)),
           ],
 
           // 조리 팁
-          if (recipeTip.isNotEmpty) ...[
+          if (rec.recipeTip.isNotEmpty) ...[
             const SizedBox(height: 24),
             const Text('조리 팁',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
@@ -246,7 +292,7 @@ class _AiRecipeDetailScreenState extends State<AiRecipeDetailScreen> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: context.borderColor),
               ),
-              child: Text('💡 $recipeTip',
+              child: Text('💡 ${rec.recipeTip}',
                   style: const TextStyle(fontSize: 14, height: 1.5)),
             ),
           ],

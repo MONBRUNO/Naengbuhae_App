@@ -13,7 +13,7 @@ const _units = ['개', 'g', 'kg', 'ml', 'L', '팩'];
 
 // 웹의 ShoppingList.tsx에 대응.
 // 헤더(N개·완료 M개) + 항목 추가 버튼(또는 인라인 폼) + 구매할 항목/구매 완료 섹션.
-// 각 미완료 항목 옆에 "냉장고 이관" 버튼: 토글 후 일괄 이관 API 호출 (백엔드는 checked 일괄 이관만 지원).
+// 각 미완료 항목 옆에 "냉장고에 추가" 버튼: per-item transfer endpoint 직접 호출.
 class ShoppingScreen extends StatefulWidget {
   const ShoppingScreen({super.key});
 
@@ -246,24 +246,39 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     }
   }
 
-  // 미완료 항목 옆 "냉장고 이관" 버튼.
-  // 백엔드는 per-item transfer를 지원하지 않으므로 toggle → move-to-fridge 순서로 호출.
-  // 다른 체크된 항목이 있으면 같이 옮겨가지만 일반적으로 문제 없음.
+  // 미완료 항목 옆 "냉장고에 추가" 버튼.
+  // 백엔드에 단일 항목 이관 endpoint (POST /api/shopping-list/{id}/transfer)가 추가돼
+  // toggle+move-to-fridge 패턴 대신 직접 호출 (다른 체크 항목 휩쓸림 방지).
   Future<void> _transfer(Map<String, dynamic> item) async {
     final id = item['id'] as int;
+    final name = item['name']?.toString() ?? '';
+
+    // 실수 클릭 방지 — 구매했는지 확인
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$name 구매하셨나요?'),
+        content: const Text('냉장고로 옮길게요.'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('취소')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('냉장고에 추가')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
     setState(() => _transferringIds.add(id));
     try {
-      final t = await ApiClient.patch('/api/shopping-list/$id/toggle');
-      if (t.statusCode != 200) {
-        _snack('이관 실패 (${t.statusCode})');
-        return;
-      }
-      final m = await ApiClient.post('/api/shopping-list/move-to-fridge');
-      if (m.statusCode == 200) {
-        _snack('${item['name']}을(를) 냉장고로 이관했습니다');
+      final res = await ApiClient.post('/api/shopping-list/$id/transfer');
+      if (res.statusCode == 200) {
+        _snack('$name 냉장고에 추가했어요');
         _fetch();
       } else {
-        _snack('이관 실패 (${m.statusCode})');
+        _snack('냉장고 추가 실패 (${res.statusCode})');
       }
     } finally {
       if (mounted) setState(() => _transferringIds.remove(id));
@@ -673,7 +688,7 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
-                child: Text(transferring ? '이관 중...' : '냉장고 이관'),
+                child: Text(transferring ? '추가 중...' : '냉장고에 추가'),
               ),
             ],
           ],

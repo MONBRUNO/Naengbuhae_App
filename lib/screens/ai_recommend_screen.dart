@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../api/ingredient_repo.dart';
+import '../state/ai_recipe_store.dart';
 import '../state/fridge_context.dart';
 import '../utils/theme_colors.dart';
 import 'ai_recipe_detail_screen.dart';
@@ -47,7 +48,8 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
   bool _loadingIngredients = true;
   final Set<String> _selectedIngredients = {};
   final Set<String> _selectedStyles = {};
-  List<Map<String, dynamic>> _results = [];
+  // 저장된 형태(id 포함). 상세 화면이 id로 다시 조회하고 즐겨찾기 토글 가능.
+  List<SavedAiRecipe> _results = [];
   String? _error;
 
   @override
@@ -101,8 +103,11 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
       }
       final list = (jsonDecode(utf8.decode(res.bodyBytes)) as List)
           .cast<Map<String, dynamic>>();
+      // SharedPreferences에 누적 저장 → 메인 레시피 화면에서도 노출. 페이지 이탈해도 안 사라짐.
+      final allSaved = await AiRecipeStore.saveAll(list);
+      // 이번에 새로 저장된 N개만 결과 화면에 (allSaved 맨 앞 N개)
       setState(() {
-        _results = list;
+        _results = allSaved.take(list.length).toList();
         _step = _AiStep.results;
       });
     } catch (_) {
@@ -477,12 +482,10 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (_, i) {
         final rec = _results[i];
-        final additional =
-            (rec['additional_ingredients'] as List?)?.cast<String>() ?? const [];
         return InkWell(
           onTap: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) => AiRecipeDetailScreen(recipe: rec),
+              builder: (_) => AiRecipeDetailScreen(recipeId: rec.id),
             ),
           ),
           borderRadius: BorderRadius.circular(12),
@@ -499,24 +502,24 @@ class _AiRecommendScreenState extends State<AiRecommendScreen> {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(rec['dish_name']?.toString() ?? '',
+                      child: Text(rec.dishName,
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
                     ),
                     Icon(Icons.chevron_right, color: context.subTextColor),
                   ],
                 ),
-                if (additional.isNotEmpty) ...[
+                if (rec.additionalIngredients.isNotEmpty) ...[
                   const SizedBox(height: 6),
                   Text(
-                    '추가 재료: ${additional.map(_parseIngredientName).join(', ')}',
+                    '추가 재료: ${rec.additionalIngredients.map(_parseIngredientName).join(', ')}',
                     style: TextStyle(fontSize: 12, color: context.subTextColor),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ],
-                if ((rec['health_benefits']?.toString() ?? '').isNotEmpty) ...[
+                if (rec.healthBenefits.isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  Text(rec['health_benefits']?.toString() ?? '',
+                  Text(rec.healthBenefits,
                       style: const TextStyle(fontSize: 13),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis),

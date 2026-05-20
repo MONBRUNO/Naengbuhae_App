@@ -3,7 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
+import '../state/ai_recipe_store.dart';
 import '../utils/theme_colors.dart';
+import 'ai_recipe_detail_screen.dart';
 import 'ai_recommend_screen.dart';
 import 'recipe_detail_screen.dart';
 
@@ -25,6 +27,8 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   List<Map<String, dynamic>> _all = [];
   // 추천 API 원본 (이미 매칭률 내림차순 정렬). 만들수있는/즐겨찾기 탭은 이 위에서 필터.
   List<Map<String, dynamic>> _recommended = [];
+  // SharedPreferences에 저장된 AI 추천 결과 — 전체 탭 맨 위에 노출.
+  List<SavedAiRecipe> _aiRecipes = [];
 
   List<Map<String, dynamic>> get _matches => _recommended
       .where((m) => ((m['hasIngredients'] as List?) ?? const []).isNotEmpty)
@@ -38,6 +42,30 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _fetch();
+    _loadAiRecipes();
+  }
+
+  Future<void> _loadAiRecipes() async {
+    final list = await AiRecipeStore.getAll();
+    if (!mounted) return;
+    setState(() => _aiRecipes = list);
+  }
+
+  Future<void> _removeAi(String id, String name) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('이 AI 추천을 삭제할까요?'),
+        content: Text(name),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('취소')),
+          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('삭제')),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    await AiRecipeStore.remove(id);
+    await _loadAiRecipes();
   }
 
   @override
@@ -104,9 +132,13 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
           IconButton(
             tooltip: 'AI 추천',
             icon: const Icon(Icons.auto_awesome),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AiRecommendScreen()),
-            ),
+            onPressed: () async {
+              await Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AiRecommendScreen()),
+              );
+              // AI 추천 화면에서 새 결과 저장될 수 있으니 돌아오면 다시 로드
+              await _loadAiRecipes();
+            },
           ),
         ],
         bottom: TabBar(
@@ -172,15 +204,124 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   }
 
   Widget _allList() {
-    if (_all.isEmpty) return Center(child: Text('등록된 레시피가 없습니다', style: TextStyle(color: context.subTextColor)));
+    if (_all.isEmpty && _aiRecipes.isEmpty) {
+      return Center(
+          child: Text('등록된 레시피가 없습니다',
+              style: TextStyle(color: context.subTextColor)));
+    }
     return RefreshIndicator(
-      onRefresh: _fetch,
-      child: ListView.separated(
+      onRefresh: () async {
+        await Future.wait([_fetch(), _loadAiRecipes()]);
+      },
+      child: ListView(
         padding: const EdgeInsets.all(16),
-        itemCount: _all.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (_, i) => _recipeCard(_all[i], null),
+        children: [
+          if (_aiRecipes.isNotEmpty) ...[
+            _aiRecipesSection(),
+            const SizedBox(height: 12),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+          ],
+          ..._all.expand((r) => [_recipeCard(r, null), const SizedBox(height: 12)]),
+        ],
       ),
+    );
+  }
+
+  // localStorage(SharedPreferences) 기반 AI 추천 리스트 — 한 번 받으면 안 사라짐.
+  Widget _aiRecipesSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.auto_awesome, size: 16, color: Color(0xFF7A9600)),
+            const SizedBox(width: 6),
+            Text('AI 추천 레시피 (${_aiRecipes.length})',
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        ..._aiRecipes.map((rec) => Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: context.cardBg,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: context.borderColor),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AiRecipeDetailScreen(recipeId: rec.id),
+                          ),
+                        );
+                        await _loadAiRecipes(); // 즐겨찾기 토글 등 반영
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 8),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFCDFF00),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.auto_awesome,
+                                      size: 10, color: Color(0xFF1A3300)),
+                                  SizedBox(width: 2),
+                                  Text('AI',
+                                      style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: Color(0xFF1A3300))),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(rec.dishName,
+                                  style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
+                            ),
+                            if (rec.favorite)
+                              const Padding(
+                                padding: EdgeInsets.only(left: 4),
+                                child: Icon(Icons.favorite,
+                                    size: 14, color: Colors.red),
+                              ),
+                            Icon(Icons.chevron_right,
+                                size: 18, color: context.subTextColor),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close,
+                        size: 16, color: context.subTextColor),
+                    onPressed: () => _removeAi(rec.id, rec.dishName),
+                    tooltip: '삭제',
+                  ),
+                ],
+              ),
+            )),
+      ],
     );
   }
 
