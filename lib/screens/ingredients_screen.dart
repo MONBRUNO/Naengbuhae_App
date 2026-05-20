@@ -612,10 +612,17 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item['name']?.toString() ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                // 우상단 삭제 버튼 자리 피해서 padding-right, 2줄까지 허용 후 ellipsis
+                Padding(
+                  padding: const EdgeInsets.only(right: 28),
+                  child: Text(item['name']?.toString() ?? '',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2)),
+                ),
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 4,
