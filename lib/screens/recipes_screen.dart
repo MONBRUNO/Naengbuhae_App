@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../api/api_client.dart';
 import '../utils/theme_colors.dart';
+import 'ai_recommend_screen.dart';
 import 'recipe_detail_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
@@ -99,6 +100,15 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
     return Scaffold(
       appBar: AppBar(
         title: const Text('레시피'),
+        actions: [
+          IconButton(
+            tooltip: 'AI 추천',
+            icon: const Icon(Icons.auto_awesome),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const AiRecommendScreen()),
+            ),
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: context.textColor,
