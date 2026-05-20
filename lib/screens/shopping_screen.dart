@@ -185,6 +185,39 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
     if (res.statusCode == 200) _fetch();
   }
 
+  // [-/+] 카운터. 1에서 -누르면 삭제 confirm.
+  Future<void> _decrement(Map<String, dynamic> item) async {
+    final qty = (item['quantity'] as num?)?.toDouble() ?? 1.0;
+    if (qty <= 1) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('${item['name']}을(를) 삭제하시겠습니까?'),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('취소')),
+            TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('삭제')),
+          ],
+        ),
+      );
+      if (ok == true) await _delete(item);
+      return;
+    }
+    await _updateQuantity(item, qty - 1);
+  }
+
+  Future<void> _increment(Map<String, dynamic> item) async {
+    final qty = (item['quantity'] as num?)?.toDouble() ?? 1.0;
+    await _updateQuantity(item, qty + 1);
+  }
+
+  Future<void> _updateQuantity(Map<String, dynamic> item, double newQty) async {
+    final res = await ApiClient.patch(
+      '/api/shopping-list/${item['id']}/quantity',
+      body: {'quantity': newQty},
+    );
+    if (res.statusCode == 200) _fetch();
+  }
+
   void _toggleSelection(int id) {
     setState(() {
       if (_selectedIds.contains(id)) {
@@ -663,9 +696,52 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(item['name']?.toString() ?? '',
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
-                  Text('${item['quantity']}${item['unit'] ?? ''}',
-                      style: TextStyle(fontSize: 12, color: context.subTextColor)),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  if (_selectionMode)
+                    Text('${item['quantity']}${item['unit'] ?? ''}',
+                        style: TextStyle(fontSize: 12, color: context.subTextColor))
+                  else
+                    // [-] 수량 [+] 카운터
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: context.borderColor),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: IntrinsicHeight(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            InkWell(
+                              onTap: () => _decrement(item),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Icon(Icons.remove, size: 16),
+                              ),
+                            ),
+                            Container(
+                              constraints: const BoxConstraints(minWidth: 40),
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${item['quantity']}${item['unit'] ?? ''}',
+                                style: const TextStyle(
+                                    fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            InkWell(
+                              onTap: () => _increment(item),
+                              child: const Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Icon(Icons.add, size: 16),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
