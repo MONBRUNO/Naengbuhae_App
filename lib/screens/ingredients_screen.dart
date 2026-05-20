@@ -19,6 +19,16 @@ const _categories = ['전체', '채소', '육류', '유제품', '곡물', '해�
     '가공식품', '음료', '조미료', '간식', '기타'];
 const _storages = ['전체', '냉장', '냉동', '실온'];
 
+// 카테고리/보관 chip 이모지 아이콘
+const Map<String, String> _categoryEmoji = {
+  '채소': '🥬', '육류': '🥩', '유제품': '🥛', '곡물': '🌾',
+  '해산물': '🐟', '과일': '🍎', '가공식품': '🥫', '음료': '🥤',
+  '조미료': '🧂', '간식': '🍪', '기타': '📦',
+};
+const Map<String, String> _storageEmoji = {
+  '냉장': '❄️', '냉동': '🧊', '실온': '🌡️',
+};
+
 // 식재료별 영양정보 (100g 기준) — 웹 Ingredients.tsx의 nutritionDatabase와 동일 셋.
 // 카드/상세 sheet에서 사용량(quantity) 비례로 환산해 표시.
 const Map<String, Map<String, double>> _nutritionDb = {
@@ -637,9 +647,11 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                                 height: 1.2)),
                       ),
                       const SizedBox(width: 6),
-                      _smallChip(item['category']?.toString() ?? '', bold: false),
+                      _smallChip(_withEmoji(item['category']?.toString() ?? '',
+                          _categoryEmoji), bold: false),
                       const SizedBox(width: 4),
-                      _smallChip(item['storage']?.toString() ?? '', bold: true),
+                      _smallChip(_withEmoji(item['storage']?.toString() ?? '',
+                          _storageEmoji), bold: true),
                       if (warnings.isNotEmpty) ...[
                         const SizedBox(width: 4),
                         Container(
@@ -698,6 +710,13 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
         ),
       ),
     );
+  }
+
+  // 한글 라벨에 매핑된 이모지가 있으면 "🥬 채소" 같이 prepend.
+  String _withEmoji(String label, Map<String, String> map) {
+    if (label.isEmpty) return label;
+    final emoji = map[label];
+    return emoji != null ? '$emoji $label' : label;
   }
 
   // 카테고리/보관 표시용 작은 chip
