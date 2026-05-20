@@ -25,8 +25,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
   List<Map<String, dynamic>> _ingredients = [];
 
   // ── AI 영양 검색 (capstone-ai /analyze 프록시) ──
-  // 노출 플래그 — AI 서버 안정화 전까지 false. 담당자 billing 등록 후 true로 복귀.
-  static const bool _aiNutritionEnabled = false;
+  // AI 서버 응답이 평균 1-2분 걸림 (공공데이터 3페이지 + Gemini 2회 + retry).
+  // 일반 사용자도 보이지만 "시간 걸린다" 안내로 커버. 발표/시연용으로도 그대로 동작.
+  static const bool _aiNutritionEnabled = true;
 
   final TextEditingController _searchController = TextEditingController();
   bool _analyzing = false;
@@ -399,6 +400,14 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 const SizedBox(height: 4),
                 Text('음식 이름이나 사진으로 영양 정보 검색 (AI 분석, 100g 기준)',
                     style: TextStyle(fontSize: 11, color: context.subTextColor)),
+                const SizedBox(height: 4),
+                Text(
+                  '⏱️ AI 분석은 정확도를 위해 공공데이터 + Gemini를 거쳐서 1~3분 정도 소요됩니다.',
+                  style: TextStyle(
+                      fontSize: 11,
+                      color: context.isDark ? const Color(0xFFFCD34D) : const Color(0xFFB45309),
+                      fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 12),
                 Row(children: [
                   Expanded(
@@ -445,7 +454,7 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 ),
                 if (_analyzing) ...[
                   const SizedBox(height: 10),
-                  const Center(child: Text('AI가 분석 중입니다...',
+                  const Center(child: Text('AI가 분석 중입니다... (최대 3분)',
                       style: TextStyle(fontSize: 12, color: Colors.grey))),
                 ],
                 if (_aiError != null) ...[

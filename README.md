@@ -37,12 +37,14 @@
 - 결과는 카드 아래 인라인으로 펼침 — `dish_name` + 추가 재료 + 효능 + 조리 팁
 - 동시에 한 카드만 추천 받기(`_recommendingIdx`) — UX/Rate 보호
 
-### AI 영양 검색/추천 UI 임시 숨김
+### AI 영양 검색/추천 — "1~3분 소요" 안내 + 그대로 노출
 
-실제 띄워서 검증해보니 AI 서버가 Gemini 무료 한도(20/day) 초과 + SDK 자동 8번 retry로 1분 hang. 사용자 UX 답 없음 → 진입점 임시 가림.
+AI 서버 응답이 평균 1-2분 걸리는데(공공데이터 3페이지 + Gemini 2회), 정확도 위해 줄이기 어렵다는 게 담당자 의견. 발표용 별도 페이지 안 만들고 그냥 **"오래 걸리는 기능"으로 노출**하기로.
 
-- `nutrition_screen.dart`에 `static const bool _aiNutritionEnabled = false` 플래그. ListView children의 collection-if (`if (_aiNutritionEnabled) ...`)로 섹션 conditional. 코드는 보존
-- 담당자가 AI 서버 안정화(Gemini Tier 1 billing + retry 끊기)하면 `true`로 바꿔 즉시 복귀
+- `_aiNutritionEnabled = true` 복귀
+- 안내 문구 추가 (amber 색): "⏱️ AI 분석은 정확도를 위해 공공데이터 + Gemini를 거쳐서 1~3분 정도 소요됩니다"
+- 로딩 메시지: "AI가 분석 중입니다... (최대 3분)"
+- 백엔드 readTimeout 180초로 늘려서 끝까지 응답 받음
 
 ---
 
