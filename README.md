@@ -28,6 +28,15 @@
 - `ImagePicker(source: gallery)`로 사진 선택 → multipart `file` 필드
 - 에러 분기: 503(AI 서버 다운) / 429(rate limit) 별도 메시지
 
+### 단일 식재료 요리 추천 결합 (`/fdmake` 프록시)
+
+영양 검색 결과 카드 각각에 "이 재료로 요리 추천" 버튼 — AI 서버 README의 `/analyze → /fdmake` 파이프라인.
+
+- 카드별 인덱스 키로 추천 결과/에러 상태 관리(`_recommendations` / `_recommendError` Map). 새 검색 시 둘 다 초기화
+- `ApiClient.post('/api/recipes/ai-for-food', body: {...})` JSON 전송 — `food_name`/`cat`/`nutrition_data`
+- 결과는 카드 아래 인라인으로 펼침 — `dish_name` + 추가 재료 + 효능 + 조리 팁
+- 동시에 한 카드만 추천 받기(`_recommendingIdx`) — UX/Rate 보호
+
 ---
 
 ## 이전 작업 정리 (2026-05-18)

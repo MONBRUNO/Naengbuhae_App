@@ -30,6 +30,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
   List<Map<String, dynamic>>? _aiResults;
   String? _aiError;
 
+  // ── /fdmake 추천 (카드별 인덱스 키) ──
+  int? _recommendingIdx;
+  final Map<int, List<Map<String, dynamic>>> _recommendations = {};
+  final Map<int, String> _recommendError = {};
+
   @override
   void initState() {
     super.initState();
@@ -48,6 +53,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
       _analyzing = true;
       _aiError = null;
       _aiResults = null;
+      // 새 검색 시 기존 추천도 초기화 (인덱스 기준이라 stale 매칭 방지)
+      _recommendations.clear();
+      _recommendError.clear();
     });
     try {
       final uri = Uri.parse('${ApiClient.baseUrl}/api/nutrition/analyze');
@@ -95,6 +103,44 @@ class _NutritionScreenState extends State<NutritionScreen> {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked == null) return;
     await _runAnalyze(filePath: picked.path);
+  }
+
+  // /api/recipes/ai-for-food (/fdmake 프록시) — 단일 식재료 + 영양정보 → 요리 3개
+  Future<void> _recommendForFood(int idx, Map<String, dynamic> item) async {
+    if (_recommendingIdx != null) return;
+    setState(() {
+      _recommendingIdx = idx;
+      _recommendError.remove(idx);
+    });
+    try {
+      final res = await ApiClient.post('/api/recipes/ai-for-food', body: {
+        'food_name': item['food_name'],
+        'cat': item['cat'] ?? '',
+        'nutrition_data': {
+          'cal': item['cal'],
+          'carbohydrate': item['carbohydrate'],
+          'protein': item['protein'],
+          'fat': item['fat'],
+        },
+      });
+      if (res.statusCode != 200) {
+        setState(() {
+          _recommendError[idx] = res.statusCode == 503
+              ? 'AI 서버에 연결할 수 없습니다.'
+              : res.statusCode == 429
+                  ? '요청이 너무 많습니다. 잠시 후 다시 시도해주세요.'
+                  : '추천 실패 (${res.statusCode})';
+        });
+        return;
+      }
+      final list = (jsonDecode(utf8.decode(res.bodyBytes)) as List)
+          .cast<Map<String, dynamic>>();
+      setState(() => _recommendations[idx] = list);
+    } catch (_) {
+      setState(() => _recommendError[idx] = '서버 연결 실패');
+    } finally {
+      if (mounted) setState(() => _recommendingIdx = null);
+    }
   }
 
   Future<void> _fetch() async {
@@ -409,7 +455,8 @@ class _NutritionScreenState extends State<NutritionScreen> {
                 ],
                 if (_aiResults != null && _aiResults!.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  ..._aiResults!.map(_nutritionResultCard),
+                  ..._aiResults!.asMap().entries.map((e) =>
+                      _nutritionResultCard(e.key, e.value)),
                 ],
               ],
             ),
@@ -419,7 +466,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
     );
   }
 
-  Widget _nutritionResultCard(Map<String, dynamic> item) {
+  Widget _nutritionResultCard(int idx, Map<String, dynamic> item) {
+    final recs = _recommendations[idx];
+    final err = _recommendError[idx];
+    final loading = _recommendingIdx == idx;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(10),
@@ -449,6 +500,72 @@ class _NutritionScreenState extends State<NutritionScreen> {
               Expanded(child: _nutCell('지방', '${(item['fat'] as num?)?.round() ?? 0}g')),
             ],
           ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton(
+              onPressed: _recommendingIdx != null
+                  ? null
+                  : () => _recommendForFood(idx, item),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: Text(loading ? '추천 받는 중...' : '이 재료로 요리 추천',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+            ),
+          ),
+          if (err != null) ...[
+            const SizedBox(height: 6),
+            Text(err, style: const TextStyle(fontSize: 11, color: Color(0xFFDC2626))),
+          ],
+          if (recs != null && recs.isEmpty) ...[
+            const SizedBox(height: 6),
+            const Text('추천 결과가 없습니다',
+                style: TextStyle(fontSize: 11, color: Colors.grey)),
+          ],
+          if (recs != null && recs.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            ...recs.map(_recipeRecommendCard),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // /fdmake 응답 한 건 카드 — {dish_name, additional_ingredients[], health_benefits, recipe_tip}
+  Widget _recipeRecommendCard(Map<String, dynamic> rec) {
+    final additional = (rec['additional_ingredients'] as List?)?.cast<String>() ?? const [];
+    return Container(
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: context.cardBg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(rec['dish_name']?.toString() ?? '',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+          if (additional.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('추가 재료: ${additional.join(", ")}',
+                style: TextStyle(fontSize: 11, color: context.subTextColor)),
+          ],
+          if ((rec['health_benefits']?.toString() ?? '').isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(rec['health_benefits']?.toString() ?? '',
+                style: const TextStyle(fontSize: 12, height: 1.4)),
+          ],
+          if ((rec['recipe_tip']?.toString() ?? '').isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text('💡 ${rec['recipe_tip']}',
+                style: TextStyle(
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                    color: context.subTextColor)),
+          ],
         ],
       ),
     );
