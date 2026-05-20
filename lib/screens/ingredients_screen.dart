@@ -547,17 +547,13 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           else
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: list.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  mainAxisExtent: 168,
-                ),
-                itemBuilder: (_, i) => _ingredientCard(list[i]),
+              child: Column(
+                children: list
+                    .map((item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _ingredientCard(item),
+                        ))
+                    .toList(),
               ),
             ),
         ],
@@ -611,55 +607,58 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // 우상단 삭제 버튼 자리 피해서 padding-right, 2줄까지 허용 후 ellipsis
+                // 이름 — 한 줄 + 우상단 삭제 자리 padding
                 Padding(
                   padding: const EdgeInsets.only(right: 28),
                   child: Text(item['name']?.toString() ?? '',
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2)),
-                ),
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: c.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(formatDDay(days),
-                          style: TextStyle(color: c, fontSize: 10, fontWeight: FontWeight.w600)),
-                    ),
-                    if (warnings.isNotEmpty)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: context.isDark ? const Color(0xFF450A0A) : Colors.red.shade100,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: const Icon(Icons.warning_amber, size: 12, color: Colors.red),
-                      ),
-                  ],
+                          fontSize: 14, fontWeight: FontWeight.w700, height: 1.2)),
                 ),
                 const SizedBox(height: 6),
-                Text(item['expirationDate']?.toString() ?? '',
-                    style: TextStyle(fontSize: 11, color: context.subTextColor)),
-                const Spacer(),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    _miniChip('${n['calories']!.round()}kcal/100g'),
-                    _miniChip('단${n['protein']!.round()}g'),
-                    _miniChip('탄${n['carbs']!.round()}g'),
-                  ],
+                // 정보 한 줄: D-day · 알레르기 · 날짜 · 영양
+                Padding(
+                  padding: const EdgeInsets.only(right: 28),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: c.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(formatDDay(days),
+                            style: TextStyle(
+                                color: c, fontSize: 11, fontWeight: FontWeight.w600)),
+                      ),
+                      if (warnings.isNotEmpty) ...[
+                        const SizedBox(width: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: context.isDark
+                                ? const Color(0xFF450A0A)
+                                : Colors.red.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child:
+                              const Icon(Icons.warning_amber, size: 12, color: Colors.red),
+                        ),
+                      ],
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          '${item['expirationDate']?.toString() ?? ''} · ${n['calories']!.round()}kcal/100g · 단${n['protein']!.round()}g · 탄${n['carbs']!.round()}g',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(fontSize: 11, color: context.subTextColor),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -697,19 +696,6 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _miniChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: context.boxBg,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 10, color: context.textColor, fontWeight: FontWeight.w500)),
     );
   }
 
