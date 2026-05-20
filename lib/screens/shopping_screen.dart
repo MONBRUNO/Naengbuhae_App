@@ -215,7 +215,17 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
       '/api/shopping-list/${item['id']}/quantity',
       body: {'quantity': newQty},
     );
-    if (res.statusCode == 200) _fetch();
+    if (res.statusCode == 200) {
+      // refetch 안 하고 _items 안의 해당 항목만 patch — 순서 유지 (사용자 어지러움 방지)
+      if (mounted) {
+        setState(() {
+          final idx = _items.indexWhere((i) => i['id'] == item['id']);
+          if (idx >= 0) {
+            _items[idx] = {..._items[idx], 'quantity': newQty};
+          }
+        });
+      }
+    }
   }
 
   void _toggleSelection(int id) {
@@ -704,43 +714,34 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                     Text('${item['quantity']}${item['unit'] ?? ''}',
                         style: TextStyle(fontSize: 12, color: context.subTextColor))
                   else
-                    // [-] 수량 [+] 카운터
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: context.borderColor),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: IntrinsicHeight(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            InkWell(
-                              onTap: () => _decrement(item),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: Icon(Icons.remove, size: 16),
-                              ),
+                    _QuantityCounter(
+                      item: item,
+                      onDecrement: () => _decrement(item),
+                      onIncrement: () => _increment(item),
+                      onCommit: (newQty) async {
+                        if (newQty <= 0) {
+                          final ok = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text('${item['name']}을(를) 삭제하시겠습니까?'),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(ctx, false),
+                                    child: const Text('취소')),
+                                TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('삭제')),
+                              ],
                             ),
-                            Container(
-                              constraints: const BoxConstraints(minWidth: 40),
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              alignment: Alignment.center,
-                              child: Text(
-                                '${item['quantity']}${item['unit'] ?? ''}',
-                                style: const TextStyle(
-                                    fontSize: 12, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            InkWell(
-                              onTap: () => _increment(item),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: Icon(Icons.add, size: 16),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                          );
+                          if (ok == true) await _delete(item);
+                          return;
+                        }
+                        final cur = (item['quantity'] as num?)?.toDouble() ?? 0;
+                        if (newQty != cur) {
+                          await _updateQuantity(item, newQty);
+                        }
+                      },
                     ),
                 ],
               ),
@@ -838,6 +839,128 @@ class _ShoppingScreenState extends State<ShoppingScreen> {
                 ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// 장보기 항목 수량 카운터 — [-] [TextField] [unit] [+]
+// 키보드로 직접 편집 가능. onSubmitted/onEditingComplete 시 commit.
+// 외부에서 item.quantity 변경되면 controller 동기화 (사용자가 입력 중이 아닐 때).
+class _QuantityCounter extends StatefulWidget {
+  final Map<String, dynamic> item;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+  final Future<void> Function(double) onCommit;
+
+  const _QuantityCounter({
+    required this.item,
+    required this.onDecrement,
+    required this.onIncrement,
+    required this.onCommit,
+  });
+
+  @override
+  State<_QuantityCounter> createState() => _QuantityCounterState();
+}
+
+class _QuantityCounterState extends State<_QuantityCounter> {
+  late TextEditingController _ctrl;
+  late FocusNode _focusNode;
+
+  String _formatQty(dynamic q) {
+    if (q == null) return '1';
+    final n = (q as num).toDouble();
+    if (n == n.roundToDouble()) return n.toInt().toString();
+    return n.toString();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: _formatQty(widget.item['quantity']));
+    _focusNode = FocusNode();
+    _focusNode.addListener(() {
+      if (!_focusNode.hasFocus) _commit();
+    });
+  }
+
+  @override
+  void didUpdateWidget(_QuantityCounter old) {
+    super.didUpdateWidget(old);
+    // 외부에서 quantity 바뀌면 controller 동기화 (사용자 입력 중이 아닐 때만)
+    final newText = _formatQty(widget.item['quantity']);
+    if (!_focusNode.hasFocus && _ctrl.text != newText) {
+      _ctrl.text = newText;
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    final parsed = double.tryParse(_ctrl.text);
+    if (parsed == null) {
+      _ctrl.text = _formatQty(widget.item['quantity']);
+      return;
+    }
+    widget.onCommit(parsed);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        border: Border.all(color: context.borderColor),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              onTap: widget.onDecrement,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Icon(Icons.remove, size: 16),
+              ),
+            ),
+            SizedBox(
+              width: 40,
+              child: TextField(
+                controller: _ctrl,
+                focusNode: _focusNode,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 6),
+                ),
+                onSubmitted: (_) => _commit(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Text(
+                widget.item['unit']?.toString() ?? '',
+                style: TextStyle(fontSize: 11, color: context.subTextColor),
+              ),
+            ),
+            InkWell(
+              onTap: widget.onIncrement,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: Icon(Icons.add, size: 16),
+              ),
+            ),
+          ],
         ),
       ),
     );
