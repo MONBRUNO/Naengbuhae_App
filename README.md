@@ -37,6 +37,13 @@
 - 결과는 카드 아래 인라인으로 펼침 — `dish_name` + 추가 재료 + 효능 + 조리 팁
 - 동시에 한 카드만 추천 받기(`_recommendingIdx`) — UX/Rate 보호
 
+### AI 영양 검색/추천 UI 임시 숨김
+
+실제 띄워서 검증해보니 AI 서버가 Gemini 무료 한도(20/day) 초과 + SDK 자동 8번 retry로 1분 hang. 사용자 UX 답 없음 → 진입점 임시 가림.
+
+- `nutrition_screen.dart`에 `static const bool _aiNutritionEnabled = false` 플래그. ListView children의 collection-if (`if (_aiNutritionEnabled) ...`)로 섹션 conditional. 코드는 보존
+- 담당자가 AI 서버 안정화(Gemini Tier 1 billing + retry 끊기)하면 `true`로 바꿔 즉시 복귀
+
 ---
 
 ## 이전 작업 정리 (2026-05-18)

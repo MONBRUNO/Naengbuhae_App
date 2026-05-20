@@ -25,6 +25,9 @@ class _NutritionScreenState extends State<NutritionScreen> {
   List<Map<String, dynamic>> _ingredients = [];
 
   // ── AI 영양 검색 (capstone-ai /analyze 프록시) ──
+  // 노출 플래그 — AI 서버 안정화 전까지 false. 담당자 billing 등록 후 true로 복귀.
+  static const bool _aiNutritionEnabled = false;
+
   final TextEditingController _searchController = TextEditingController();
   bool _analyzing = false;
   List<Map<String, dynamic>>? _aiResults;
@@ -380,9 +383,11 @@ class _NutritionScreenState extends State<NutritionScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
           // AI 영양 검색 (capstone-ai /analyze 프록시)
-          Container(
+          // ⚠️ TEMP DISABLED (2026-05-20): AI 서버가 Gemini 무료 한도(20/day) 초과 + 8번 retry로 1분 hang.
+          // 담당자가 Tier 1 billing 등록 + retry 끊으면 _aiNutritionEnabled = true 로 복귀.
+          if (_aiNutritionEnabled) const SizedBox(height: 16),
+          if (_aiNutritionEnabled) Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
                 color: context.cardBg, borderRadius: BorderRadius.circular(12)),
