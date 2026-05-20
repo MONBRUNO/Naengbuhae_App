@@ -619,7 +619,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                       color: c, fontSize: 11, fontWeight: FontWeight.w600)),
             ),
             const SizedBox(width: 10),
-            // 중간: 이름 + 정보
+            // 중간: 이름 + (카테고리/보관 chip + 알레르기) + 정보
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,7 +627,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
+                      Flexible(
                         child: Text(item['name']?.toString() ?? '',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -636,8 +636,12 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                                 fontWeight: FontWeight.w700,
                                 height: 1.2)),
                       ),
+                      const SizedBox(width: 6),
+                      _smallChip(item['category']?.toString() ?? '', bold: false),
+                      const SizedBox(width: 4),
+                      _smallChip(item['storage']?.toString() ?? '', bold: true),
                       if (warnings.isNotEmpty) ...[
-                        const SizedBox(width: 6),
+                        const SizedBox(width: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                           decoration: BoxDecoration(
@@ -646,8 +650,8 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                                 : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child:
-                              const Icon(Icons.warning_amber, size: 12, color: Colors.red),
+                          child: const Icon(Icons.warning_amber,
+                              size: 12, color: Colors.red),
                         ),
                       ],
                     ],
@@ -693,6 +697,23 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  // 카테고리/보관 표시용 작은 chip
+  Widget _smallChip(String text, {bool bold = false}) {
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.boxBg,
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 10,
+              color: context.subTextColor,
+              fontWeight: bold ? FontWeight.w600 : FontWeight.w500)),
     );
   }
 
