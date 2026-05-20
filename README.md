@@ -19,6 +19,15 @@
 - `nutritionDatabase` Dart 포팅 — 23개 식재료 + default fallback, 100g 기준 수량 비례 환산
 - **Dismissible swipe 제거** — 좁은 그리드 카드에서 가로 스와이프가 어색. 편집은 상세 sheet의 "수정" 버튼으로 진입
 
+### AI 영양 검색 결합 (capstone-ai `/analyze` 프록시)
+
+백엔드에 추가된 `POST /api/nutrition/analyze`(외부 AI 서버 위임)를 영양 분석 화면에 결합. hardcoded `_nutritionDb`로 커버 못 하는 임의 음식도 동적으로 조회.
+
+- `nutrition_screen.dart`: 화면 하단에 "다른 음식 영양 검색" 카드 추가 — TextField + 검색 버튼 + 사진 업로드 버튼, 결과 카드 리스트
+- `http.MultipartRequest` 직접 구성 (text 필드 + file). `ApiClient.uploadFile`은 file 전용이라 이번 일회성 케이스는 inline 처리. 토큰은 `AuthStorage.readAccessToken()`로 부착
+- `ImagePicker(source: gallery)`로 사진 선택 → multipart `file` 필드
+- 에러 분기: 503(AI 서버 다운) / 429(rate limit) 별도 메시지
+
 ---
 
 ## 이전 작업 정리 (2026-05-18)
