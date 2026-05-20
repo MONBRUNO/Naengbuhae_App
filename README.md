@@ -7,7 +7,21 @@
 
 ---
 
-## 🆕 이번 작업 정리 (2026-05-18)
+## 🆕 이번 작업 정리 (2026-05-20)
+
+### 식재료 화면 — 2열 그리드 + bottom sheet 상세 (팀원 웹 디자인 반영)
+
+웹 `Ingredients.tsx`의 [디자인수정] (`58e766bb`)을 앱에 옮김. 색상·하단바 변경은 제외, 구조 변경만.
+
+- 카드 리스트 → 2열 `GridView.builder` (mainAxisExtent 168)
+- 컴팩트 카드: 이름 + D-day badge + 알레르기 아이콘 + 날짜 + 영양 칩 3개(`kcal / 단X / 탄X`) + 우상단 Stack에 삭제/체크박스
+- 카드 탭 → `showModalBottomSheet` 상세 (핸들 / 헤더 / 상태태그 / 정보블록 / 영양 grid 2x2 / 수정·삭제 버튼)
+- `nutritionDatabase` Dart 포팅 — 23개 식재료 + default fallback, 100g 기준 수량 비례 환산
+- **Dismissible swipe 제거** — 좁은 그리드 카드에서 가로 스와이프가 어색. 편집은 상세 sheet의 "수정" 버튼으로 진입
+
+---
+
+## 이전 작업 정리 (2026-05-18)
 
 ### 버그 / 안정성
 
