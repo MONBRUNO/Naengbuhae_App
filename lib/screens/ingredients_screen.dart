@@ -592,50 +592,52 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
           _showDetailSheet(item);
         }
       },
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: _selectionMode && isSelected
-                  ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB))
-                  : context.cardBg,
-              borderRadius: BorderRadius.circular(12),
-              border: _selectionMode && isSelected
-                  ? Border.all(color: _accentGreen, width: 2)
-                  : null,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _selectionMode && isSelected
+              ? (context.isDark ? const Color(0xFF365314) : const Color(0xFFECFCCB))
+              : context.cardBg,
+          borderRadius: BorderRadius.circular(12),
+          border: _selectionMode && isSelected
+              ? Border.all(color: _accentGreen, width: 2)
+              : null,
+        ),
+        // Row + crossAxisAlignment center → 삭제 버튼이 세로 가운데 정렬됨
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // 왼쪽: D-day 뱃지
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: c.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(formatDDay(days),
+                  style: TextStyle(
+                      color: c, fontSize: 11, fontWeight: FontWeight.w600)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 이름 — 한 줄 + 우상단 삭제 자리 padding
-                Padding(
-                  padding: const EdgeInsets.only(right: 28),
-                  child: Text(item['name']?.toString() ?? '',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w700, height: 1.2)),
-                ),
-                const SizedBox(height: 6),
-                // 정보 한 줄: D-day · 알레르기 · 날짜 · 영양
-                Padding(
-                  padding: const EdgeInsets.only(right: 28),
-                  child: Row(
+            const SizedBox(width: 10),
+            // 중간: 이름 + 정보
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: c.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(formatDDay(days),
-                            style: TextStyle(
-                                color: c, fontSize: 11, fontWeight: FontWeight.w600)),
+                      Expanded(
+                        child: Text(item['name']?.toString() ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                height: 1.2)),
                       ),
                       if (warnings.isNotEmpty) ...[
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                           decoration: BoxDecoration(
@@ -648,53 +650,48 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                               const Icon(Icons.warning_amber, size: 12, color: Colors.red),
                         ),
                       ],
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          '${item['expirationDate']?.toString() ?? ''} · ${n['calories']!.round()}kcal/100g · 단${n['protein']!.round()}g · 탄${n['carbs']!.round()}g',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(fontSize: 11, color: context.subTextColor),
-                        ),
-                      ),
                     ],
                   ),
-                ),
-              ],
-            ),
-          ),
-          // 우상단 — 선택 모드면 체크박스, 아니면 삭제 버튼.
-          Positioned(
-            top: 4,
-            right: 4,
-            child: _selectionMode
-                ? Container(
-                    margin: const EdgeInsets.all(4),
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: isSelected ? _accentGreen : Colors.white,
-                      border: Border.all(
-                        color: isSelected ? _accentGreen : const Color(0xFFD1D5DB),
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: isSelected
-                        ? const Icon(Icons.check, size: 14, color: Colors.black)
-                        : null,
-                  )
-                : InkWell(
-                    onTap: () => _delete(item),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(6),
-                      child: Icon(Icons.delete_outline,
-                          size: 18, color: Colors.red.shade400),
-                    ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${item['expirationDate']?.toString() ?? ''} · ${n['calories']!.round()}kcal/100g · 단${n['protein']!.round()}g · 탄${n['carbs']!.round()}g',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: context.subTextColor),
                   ),
-          ),
-        ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            // 오른쪽: 삭제 / 체크박스 (Row crossAxis center로 세로 가운데)
+            if (_selectionMode)
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: isSelected ? _accentGreen : Colors.white,
+                  border: Border.all(
+                    color: isSelected ? _accentGreen : const Color(0xFFD1D5DB),
+                    width: 2,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: isSelected
+                    ? const Icon(Icons.check, size: 14, color: Colors.black)
+                    : null,
+              )
+            else
+              InkWell(
+                onTap: () => _delete(item),
+                borderRadius: BorderRadius.circular(8),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(Icons.delete_outline,
+                      size: 18, color: Colors.red.shade400),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
