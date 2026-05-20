@@ -9,42 +9,60 @@
 
 ## 🆕 이번 작업 정리 (2026-05-20)
 
-### 식재료 화면 — 2열 그리드 + bottom sheet 상세 (팀원 웹 디자인 반영)
+### AI 통합 (capstone-ai FastAPI 서버 결합)
 
-웹 `Ingredients.tsx`의 [디자인수정] (`58e766bb`)을 앱에 옮김. 색상·하단바 변경은 제외, 구조 변경만.
+AI 담당자의 별도 서버(`Wldgyu/capstone-ai`, 포트 8000)에 있는 3개 endpoint를 앱에 통합. 백엔드에 프록시가 새로 생겨서(`/api/nutrition/analyze`, `/api/recipes/ai-for-food`, `POST /api/recipes/ai-recommendations`) 앱은 백엔드만 호출.
 
-- 카드 리스트 → 2열 `GridView.builder` (mainAxisExtent 168)
-- 컴팩트 카드: 이름 + D-day badge + 알레르기 아이콘 + 날짜 + 영양 칩 3개(`kcal / 단X / 탄X`) + 우상단 Stack에 삭제/체크박스
-- 카드 탭 → `showModalBottomSheet` 상세 (핸들 / 헤더 / 상태태그 / 정보블록 / 영양 grid 2x2 / 수정·삭제 버튼)
-- `nutritionDatabase` Dart 포팅 — 23개 식재료 + default fallback, 100g 기준 수량 비례 환산
-- **Dismissible swipe 제거** — 좁은 그리드 카드에서 가로 스와이프가 어색. 편집은 상세 sheet의 "수정" 버튼으로 진입
+**AI 영양 검색 (`/analyze` 프록시)**
+- `nutrition_screen.dart` 하단에 "다른 음식 영양 검색" 카드 — TextField + 검색 + 사진 업로드, 결과 카드 리스트
+- `http.MultipartRequest` 직접 구성(text/file 필드). 토큰은 `AuthStorage.readAccessToken()`로 부착
+- `ImagePicker(source: gallery)` → multipart `file`
+- 에러 분기: 503(AI 서버 다운) / 429(rate limit)
 
-### AI 영양 검색 결합 (capstone-ai `/analyze` 프록시)
-
-백엔드에 추가된 `POST /api/nutrition/analyze`(외부 AI 서버 위임)를 영양 분석 화면에 결합. hardcoded `_nutritionDb`로 커버 못 하는 임의 음식도 동적으로 조회.
-
-- `nutrition_screen.dart`: 화면 하단에 "다른 음식 영양 검색" 카드 추가 — TextField + 검색 버튼 + 사진 업로드 버튼, 결과 카드 리스트
-- `http.MultipartRequest` 직접 구성 (text 필드 + file). `ApiClient.uploadFile`은 file 전용이라 이번 일회성 케이스는 inline 처리. 토큰은 `AuthStorage.readAccessToken()`로 부착
-- `ImagePicker(source: gallery)`로 사진 선택 → multipart `file` 필드
-- 에러 분기: 503(AI 서버 다운) / 429(rate limit) 별도 메시지
-
-### 단일 식재료 요리 추천 결합 (`/fdmake` 프록시)
-
-영양 검색 결과 카드 각각에 "이 재료로 요리 추천" 버튼 — AI 서버 README의 `/analyze → /fdmake` 파이프라인.
-
-- 카드별 인덱스 키로 추천 결과/에러 상태 관리(`_recommendations` / `_recommendError` Map). 새 검색 시 둘 다 초기화
-- `ApiClient.post('/api/recipes/ai-for-food', body: {...})` JSON 전송 — `food_name`/`cat`/`nutrition_data`
-- 결과는 카드 아래 인라인으로 펼침 — `dish_name` + 추가 재료 + 효능 + 조리 팁
+**단일 식재료 요리 추천 (`/fdmake` 프록시)**
+- 영양 검색 결과 카드에 "이 재료로 요리 추천" 버튼 — `/analyze → /fdmake` 파이프라인
+- 카드별 인덱스 키로 추천/에러 상태 관리(`_recommendations` / `_recommendError` Map)
 - 동시에 한 카드만 추천 받기(`_recommendingIdx`) — UX/Rate 보호
 
-### AI 영양 검색/추천 — "1~3분 소요" 안내 + 그대로 노출
+**AI 레시피 추천 페이지 분리 + 즐겨찾기 + 영속화**
+- 기존 모달 → 별도 페이지 `ai_recommend_screen.dart` (Step 1: 식재료 선택 / Step 2: 요리 스타일 / 로딩 / 결과)
+- 결과 클릭 시 `ai_recipe_detail_screen.dart` 상세 페이지 (기존 레시피 상세와 동일 흐름)
+- 상세에 하트 아이콘으로 즐겨찾기 토글
+- `state/ai_recipe_store.dart` (SharedPreferences) — `SavedAiRecipe(toJson/fromJson)` 저장. 결과 한 번 보면 날아가던 문제 해결
+- `recipes_screen.dart` "전체" 탭 최상단에 AI 추천 섹션 — AppBar action `✨` 버튼으로 추천 화면 진입
 
-AI 서버 응답이 평균 1-2분 걸리는데(공공데이터 3페이지 + Gemini 2회), 정확도 위해 줄이기 어렵다는 게 담당자 의견. 발표용 별도 페이지 안 만들고 그냥 **"오래 걸리는 기능"으로 노출**하기로.
+**"1~3분 소요" 안내 + 그대로 노출**
+- AI 서버 응답이 평균 1-2분(공공데이터 3페이지 + Gemini 2회). 정확도 위해 줄이기 어렵다는 담당자 의견 → "오래 걸리는 기능"으로 노출
+- `_aiNutritionEnabled = true` 복귀 + amber 안내 문구 "⏱️ AI 분석은 정확도를 위해 공공데이터 + Gemini를 거쳐서 1~3분 정도 소요됩니다"
+- 로딩 메시지: "AI가 분석 중입니다... (최대 3분)" / 백엔드 readTimeout 180초
 
-- `_aiNutritionEnabled = true` 복귀
-- 안내 문구 추가 (amber 색): "⏱️ AI 분석은 정확도를 위해 공공데이터 + Gemini를 거쳐서 1~3분 정도 소요됩니다"
-- 로딩 메시지: "AI가 분석 중입니다... (최대 3분)"
-- 백엔드 readTimeout 180초로 늘려서 끝까지 응답 받음
+### 식재료 카드 — 1열 컴팩트 + D-day 왼쪽 + 이모지 chip
+
+초기엔 웹 `[디자인수정]` 따라 2열 그리드 + bottom sheet로 갔다가, 사용자 피드백("긴 이름 삭제버튼 침범" / "한 줄에 카드 하나만") 으로 1열 컴팩트로 재설계.
+
+- `ListView.builder` 1열 — 각 카드는 Row: [D-day badge(왼쪽)] + [이름 + dot-separated 정보 + chips] + [삭제(세로 가운데)]
+- D-day badge를 이름 왼쪽에 둬서 만료 임박 한눈에 보임
+- 삭제 버튼은 `crossAxisAlignment: center` — 이름 줄바꿈돼도 안 따라감
+- 이름 오른쪽에 카테고리 + 보관 chip — `_withEmoji(category)` 헬퍼로 이모지 prefix (🥦 채소 / 🥩 육류 / ❄️ 냉장 / 🧊 냉동 / 🌡 실온)
+- `nutritionDatabase` 100g 기준 그대로 표시 (`quantity factor` 제거) — 가공 식품 영양정보는 일관성 위해 100g 단위가 표준
+
+### 장보기 — "냉장고에 추가" + 수량 카운터 + 키보드 편집
+
+**라벨/UX 변경**
+- "냉장고 이관" → "냉장고에 추가" + 누르면 "[식재료]을(를) 구매하셨나요? 구매 완료로 표시하고 냉장고에 추가됩니다" confirm 다이얼로그
+
+**[-] 수량 [+] 카운터**
+- 항목 카드 옆 `_QuantityCounter` StatefulWidget — `Container + IntrinsicHeight + Row [InkWell(-), TextField, unit, InkWell(+)]`
+- 1에서 [-] 누르면 "삭제하시겠습니까?" confirm → 삭제
+- `PATCH /api/shopping-list/{id}/quantity` 호출 (백엔드 신규 endpoint)
+
+**키보드 직접 편집**
+- TextField로 숫자 직접 입력 가능 (`numberWithOptions(decimal: true)`)
+- onSubmitted(Enter) / focusNode unfocus 시 자동 commit
+- 외부에서 quantity 갱신되면 `didUpdateWidget`에서 controller 동기화 (사용자 입력 중엔 X)
+
+**순서 보존**
+- `_updateQuantity`가 `_fetch()` 대신 `setState`로 `_items` 해당 항목만 patch — 수량 바꾼다고 카드가 밑으로 안 내려감 (사용자 어지러움 방지)
 
 ---
 
