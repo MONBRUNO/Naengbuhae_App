@@ -583,9 +583,9 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final id = item['id'] as int;
     final isSelected = _selectedIds.contains(id);
 
-    final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+    // 영양 정보는 100g 기준값 그대로 표시. quantity 단위가 "개"/"팩"일 때 g 환산이 부정확해
+    // (장보기에서 이관된 항목은 quantity=1로 들어와 거의 다 0으로 떴음) 라벨에 "/100g" 명시.
     final n = _nutritionOf(item['name']?.toString() ?? '');
-    final factor = qty / 100;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -649,9 +649,9 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                   spacing: 4,
                   runSpacing: 4,
                   children: [
-                    _miniChip('${(n['calories']! * factor).round()}kcal'),
-                    _miniChip('단${(n['protein']! * factor).round()}g'),
-                    _miniChip('탄${(n['carbs']! * factor).round()}g'),
+                    _miniChip('${n['calories']!.round()}kcal/100g'),
+                    _miniChip('단${n['protein']!.round()}g'),
+                    _miniChip('탄${n['carbs']!.round()}g'),
                   ],
                 ),
               ],
@@ -713,9 +713,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
     final s = getExpiryStatus(days);
     final c = statusColor(s);
     final warnings = (item['allergyWarnings'] as List?)?.cast<String>() ?? const [];
-    final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
     final n = _nutritionOf(item['name']?.toString() ?? '');
-    final factor = qty / 100;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -835,7 +833,7 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('영양 정보 (${item['quantity']}${item['unit']} 기준)',
+                        Text('영양 정보 (100g 기준)',
                             style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -844,21 +842,21 @@ class _IngredientsScreenState extends State<IngredientsScreen> {
                         Row(children: [
                           Expanded(
                               child: _nutritionBox(sheetCtx,
-                                  '${(n['calories']! * factor).round()}', 'kcal')),
+                                  '${n['calories']!.round()}', 'kcal')),
                           const SizedBox(width: 8),
                           Expanded(
                               child: _nutritionBox(sheetCtx,
-                                  '${(n['protein']! * factor).round()}g', '단백질')),
+                                  '${n['protein']!.round()}g', '단백질')),
                         ]),
                         const SizedBox(height: 8),
                         Row(children: [
                           Expanded(
                               child: _nutritionBox(sheetCtx,
-                                  '${(n['carbs']! * factor).round()}g', '탄수화물')),
+                                  '${n['carbs']!.round()}g', '탄수화물')),
                           const SizedBox(width: 8),
                           Expanded(
                               child: _nutritionBox(sheetCtx,
-                                  '${(n['fat']! * factor).round()}g', '지방')),
+                                  '${n['fat']!.round()}g', '지방')),
                         ]),
                       ],
                     ),
