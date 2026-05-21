@@ -15,7 +15,7 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:label="naengbuhae_app"
+        android:label="Naengbuhae"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="true"><!-- dev: http://10.0.2.2 허용. 운영 배포 전 https로 전환 -->

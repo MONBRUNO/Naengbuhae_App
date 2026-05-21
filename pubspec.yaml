@@ -62,6 +62,16 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
 
+  # 앱 아이콘 자동 생성 — `dart run flutter_launcher_icons` 실행으로 재생성
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/brand/app_icon.png"
+  # iOS는 알파 채널 거부 → 투명 부분을 흰 배경으로 채워서 처리
+  remove_alpha_ios: true
+
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 
