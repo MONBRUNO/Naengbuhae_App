@@ -102,27 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        // LayoutBuilder + IntrinsicHeight + minHeight 트릭:
-        // 화면 작으면 스크롤, 크면 Spacer가 작동해서 입력칸을 정확히 가운데에 위치.
-        child: LayoutBuilder(
-          builder: (context, constraints) => SingleChildScrollView(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+          child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 420),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                  // 브랜드 로고 — 상단에 붙이기 (최소 top 마진)
-                  const SizedBox(height: 4),
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // 브랜드 로고 (폼 너비 꽉 채움 — 투명 PNG)
                   Image.asset('assets/brand/logo_full.png',
                       width: double.infinity, fit: BoxFit.contain),
-                  // Spacer가 로고와 form 사이 빈 공간을 위로 밀어줘서 form이 viewport 중앙으로
-                  const Spacer(),
+                  const SizedBox(height: 4),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
@@ -184,8 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  // form과 social 영역 사이도 Spacer — 입력칸이 정확히 viewport 가운데 오도록
-                  const Spacer(),
+                  const SizedBox(height: 6),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -256,12 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
                 ],
-              ),
-            ),
-                  ),
-                ),
               ),
             ),
           ),
