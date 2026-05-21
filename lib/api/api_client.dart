@@ -16,8 +16,11 @@ import 'auth_storage.dart';
 class ApiClient {
   // Android 에뮬레이터: 호스트의 localhost = 10.0.2.2
   // iOS 시뮬레이터: localhost
-  // 실기기: 같은 네트워크의 PC IP 또는 ngrok/배포 URL로 변경
+  // 실기기: 빌드 시 --dart-define=API_BASE_URL=http://<PC_LAN_IP>:8080 로 override
+  //   예: flutter run --dart-define=API_BASE_URL=http://192.168.80.251:8080
   static String get baseUrl {
+    const override = String.fromEnvironment('API_BASE_URL');
+    if (override.isNotEmpty) return override;
     if (Platform.isAndroid) return 'http://10.0.2.2:8080';
     return 'http://localhost:8080';
   }
