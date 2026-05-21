@@ -110,10 +110,15 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 브랜드 로고 (폼 너비 꽉 채움 — 투명 PNG)
-                  Image.asset('assets/brand/logo_full.png',
-                      width: double.infinity, fit: BoxFit.contain),
-                  const SizedBox(height: 4),
+                  // 브랜드 로고 — Transform.scale로 좌우로 살짝 더 키움.
+                  // alignment topCenter라 시각적으로 아래쪽으로 자라서 로그인칸에 가까워짐.
+                  Transform.scale(
+                    scale: 1.15,
+                    alignment: Alignment.topCenter,
+                    child: Image.asset('assets/brand/logo_full.png',
+                        width: double.infinity, fit: BoxFit.contain),
+                  ),
+                  const SizedBox(height: 0),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
