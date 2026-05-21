@@ -135,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _submitting ? null : _handleSubmit,
                     child: Text(_submitting ? '로그인 중...' : '로그인'),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 12),
                   // 비로그인 진입 + 비번 찾기 — 한 줄에 묶어 깔끔하게 (밑줄 제거, · 구분)
                   Center(
                     child: Row(
@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
