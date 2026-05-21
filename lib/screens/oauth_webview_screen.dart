@@ -39,10 +39,14 @@ class _OAuthWebViewScreenState extends State<OAuthWebViewScreen> {
           if (mounted) setState(() => _loading = false);
         },
         onNavigationRequest: (request) {
-          final result = _tryExtractTokens(request.url);
-          if (result != null) {
-            // 콜백 URL을 실제로 로드하진 않음 (localhost:5173은 모바일에서 도달 불가)
-            Navigator.of(context).pop(result);
+          // /oauth/callback 패턴이면 무조건 가로챔 (성공/실패 둘 다).
+          // 실제 URL 로드는 안 함 (localhost:5173은 모바일에서 도달 불가).
+          if (request.url.contains('/oauth/callback')) {
+            final result = _tryExtractTokens(request.url);
+            if (result != null) {
+              Navigator.of(context).pop(result);
+            }
+            // _tryExtractTokens가 실패 케이스도 pop 처리하므로 여기선 무조건 prevent
             return NavigationDecision.prevent;
           }
           return NavigationDecision.navigate;
@@ -54,7 +58,7 @@ class _OAuthWebViewScreenState extends State<OAuthWebViewScreen> {
       ..loadRequest(Uri.parse('${ApiClient.baseUrl}/oauth2/authorization/${widget.provider}'));
   }
 
-  // URL에 oauth/callback이 포함되고 token이 있으면 OAuth 성공으로 간주.
+  // URL에 oauth/callback이 포함되면 인터셉트. token 있으면 성공, 없으면 에러 메시지.
   // 백엔드 frontend-redirect URL이 변경돼도(예: 운영 도메인) 동작하도록 패턴 매칭.
   OAuthResult? _tryExtractTokens(String url) {
     if (!url.contains('/oauth/callback')) return null;
@@ -62,7 +66,15 @@ class _OAuthWebViewScreenState extends State<OAuthWebViewScreen> {
     if (uri == null) return null;
     final token = uri.queryParameters['token'];
     final refreshToken = uri.queryParameters['refreshToken'];
-    if (token == null || refreshToken == null) return null;
+    if (token == null || refreshToken == null) {
+      // 백엔드 OAuth2FailureHandler가 보낸 error=... — WebView에 alert만 띄우고 pop
+      final error = uri.queryParameters['error'] ?? 'unknown';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OAuth 로그인 실패: $error')),
+      );
+      Navigator.of(context).pop();
+      return null;
+    }
     final needsAdditionalInfo = uri.queryParameters['needsAdditionalInfo'] == 'true';
     return OAuthResult(
       accessToken: token,
