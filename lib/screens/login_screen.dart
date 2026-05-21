@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 14),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const Expanded(child: Divider()),
                   ]),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
