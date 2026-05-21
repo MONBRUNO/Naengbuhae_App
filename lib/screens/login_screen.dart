@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -113,13 +113,13 @@ class _LoginScreenState extends State<LoginScreen> {
                   // 브랜드 로고 (폼 너비 꽉 채움 — 투명 PNG)
                   Image.asset('assets/brand/logo_full.png',
                       width: double.infinity, fit: BoxFit.contain),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
                     autocorrect: false,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _textField(
                     controller: _passwordController,
                     hint: '비밀번호',
@@ -130,12 +130,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () => setState(() => _showPassword = !_showPassword),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   ElevatedButton(
                     onPressed: _submitting ? null : _handleSubmit,
                     child: Text(_submitting ? '로그인 중...' : '로그인'),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   // 비로그인 진입 + 비번 찾기 — 한 줄에 묶어 깔끔하게 (밑줄 제거, · 구분)
                   Center(
                     child: Row(
@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -185,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const Expanded(child: Divider()),
                   ]),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
