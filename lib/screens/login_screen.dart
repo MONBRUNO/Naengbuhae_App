@@ -104,17 +104,16 @@ class _LoginScreenState extends State<LoginScreen> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 12),
                   // 브랜드 로고 (폼 너비 꽉 채움 — 투명 PNG)
                   Image.asset('assets/brand/logo_full.png',
                       width: double.infinity, fit: BoxFit.contain),
-                  const SizedBox(height: 28),
+                  const SizedBox(height: 8),
                   _textField(
                     controller: _usernameController,
                     hint: '아이디',
@@ -176,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   Row(children: [
                     const Expanded(child: Divider()),
                     Padding(
@@ -186,7 +185,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     const Expanded(child: Divider()),
                   ]),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -224,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
