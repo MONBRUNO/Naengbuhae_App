@@ -48,6 +48,8 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   String? _error;
   // 추천 API 응답 (모든 레시피 + 매칭정보). 식단은 이걸로 생성.
   List<Map<String, dynamic>> _matches = [];
+  // AI 식단 (백엔드 Gemini). null이면 아직 안 받았거나 실패 → 규칙 기반 폴백.
+  List<Map<String, dynamic>>? _aiPlan;
   bool _hasIngredients = true;
   int _selectedDays = 7;
 
@@ -61,6 +63,7 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     setState(() {
       _loading = true;
       _error = null;
+      _aiPlan = null;
     });
     try {
       final results = await Future.wait([
@@ -86,6 +89,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         lunch: todays?.lunch,
         dinner: todays?.dinner,
       );
+      // AI 식단 요청 — 백그라운드로 받아오고 도착하면 화면 갱신 (실패 시 규칙 기반 유지)
+      // ignore: unawaited_futures
+      _fetchAiPlan(matches, ingredients);
     } catch (e) {
       setState(() => _error = '서버 연결 실패: $e');
     } finally {
@@ -93,10 +99,89 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     }
   }
 
+  // 백엔드 Gemini로 AI 식단을 받아온다. 실패해도 무시 — 규칙 기반 폴백이 동작.
+  Future<void> _fetchAiPlan(
+      List<Map<String, dynamic>> matches, List<dynamic> ingredients) async {
+    try {
+      final recipeNames = matches
+          .map((m) => (m['recipe'] as Map?)?['name']?.toString())
+          .whereType<String>()
+          .toList();
+      if (recipeNames.isEmpty) return;
+      final ingNames = ingredients
+          .map((i) => (i is Map) ? i['name']?.toString() : null)
+          .whereType<String>()
+          .toList();
+      final res = await ApiClient.post('/api/recipes/meal-plan', body: {
+        'recipes': recipeNames,
+        'ingredients': ingNames,
+        'days': 7,
+      });
+      if (res.statusCode != 200) return;
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      final plan = (data['plan'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (plan.isEmpty || !mounted) return;
+      setState(() => _aiPlan = plan);
+      // AI 식단 반영 후 오늘의 식단 알림 갱신
+      final today = _generateMealPlan();
+      if (today.isNotEmpty) {
+        // ignore: unawaited_futures
+        NotificationService.rescheduleMealNotifications(
+          breakfast: today.first.breakfast,
+          lunch: today.first.lunch,
+          dinner: today.first.dinner,
+        );
+      }
+    } catch (_) {
+      // 실패 — 규칙 기반으로 폴백
+    }
+  }
+
   List<_MealPlanItem> _generateMealPlan() {
     if (_matches.isEmpty) return [];
 
-    // 매칭률 높은 순 정렬 — 만들기 쉬운 레시피가 앞쪽.
+    // 이름 → 레시피 (영양 합산용)
+    final byName = <String, Map<String, dynamic>>{};
+    for (final m in _matches) {
+      final r = (m['recipe'] as Map?)?.cast<String, dynamic>();
+      final name = r?['name']?.toString();
+      if (r != null && name != null) byName[name] = r;
+    }
+
+    _MealPlanItem buildItem(int i, String b, String l, String d) {
+      final bn = (byName[b]?['nutrition'] as Map?)?.cast<String, dynamic>();
+      final ln = (byName[l]?['nutrition'] as Map?)?.cast<String, dynamic>();
+      final dn = (byName[d]?['nutrition'] as Map?)?.cast<String, dynamic>();
+      double sum(String key) => _num(bn?[key]) + _num(ln?[key]) + _num(dn?[key]);
+      return _MealPlanItem(
+        day: _daysOfWeek[i % 7],
+        breakfast: b,
+        lunch: l,
+        dinner: d,
+        totalCalories: sum('calories'),
+        totalProtein: sum('protein'),
+        totalCarbs: sum('carbs'),
+        totalFat: sum('fat'),
+      );
+    }
+
+    // AI 식단이 있으면 우선 사용
+    final ai = _aiPlan;
+    if (ai != null && ai.isNotEmpty) {
+      final plan = <_MealPlanItem>[];
+      for (var i = 0; i < _selectedDays && i < ai.length; i++) {
+        final day = ai[i];
+        plan.add(buildItem(
+          i,
+          day['breakfast']?.toString() ?? '-',
+          day['lunch']?.toString() ?? '-',
+          day['dinner']?.toString() ?? '-',
+        ));
+      }
+      return plan;
+    }
+
+    // 폴백: 규칙 기반 순환 (끼니별 후보 풀에서 요일마다 순환 선택)
     final sorted = _matches.toList()
       ..sort((a, b) =>
           ((b['matchRate'] ?? 0) as num).compareTo((a['matchRate'] ?? 0) as num));
@@ -104,12 +189,9 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
         .map((m) => (m['recipe'] as Map).cast<String, dynamic>())
         .toList();
     if (allRecipes.isEmpty) return [];
-
     List<Map<String, dynamic>> inCats(List<String> cats) => allRecipes
         .where((r) => cats.contains(r['category']?.toString()))
         .toList();
-
-    // 아침: 간식·음료(가벼운 끼니). 점심·저녁: 밥/면·반찬·기타·샐러드. 적으면 전체로 폴백.
     var breakfastPool = inCats(['간식', '음료']);
     if (breakfastPool.length < 2) breakfastPool = allRecipes;
     var mealPool = inCats(['밥/면', '반찬', '기타', '샐러드']);
@@ -117,27 +199,11 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
 
     final plan = <_MealPlanItem>[];
     for (var i = 0; i < _selectedDays; i++) {
-      final breakfast = breakfastPool[i % breakfastPool.length];
-      // 점심·저녁은 서로 다른 인덱스 — 같은 날 중복 방지 + 요일별 순환
-      final lunch = mealPool[(i * 2) % mealPool.length];
-      final dinner = mealPool[(i * 2 + 1) % mealPool.length];
-
-      final bn = (breakfast['nutrition'] as Map?)?.cast<String, dynamic>();
-      final ln = (lunch['nutrition'] as Map?)?.cast<String, dynamic>();
-      final dn = (dinner['nutrition'] as Map?)?.cast<String, dynamic>();
-
-      double sum(String key) =>
-          _num(bn?[key]) + _num(ln?[key]) + _num(dn?[key]);
-
-      plan.add(_MealPlanItem(
-        day: _daysOfWeek[i % 7],
-        breakfast: breakfast['name']?.toString() ?? '-',
-        lunch: lunch['name']?.toString() ?? '-',
-        dinner: dinner['name']?.toString() ?? '-',
-        totalCalories: sum('calories'),
-        totalProtein: sum('protein'),
-        totalCarbs: sum('carbs'),
-        totalFat: sum('fat'),
+      plan.add(buildItem(
+        i,
+        breakfastPool[i % breakfastPool.length]['name']?.toString() ?? '-',
+        mealPool[(i * 2) % mealPool.length]['name']?.toString() ?? '-',
+        mealPool[(i * 2 + 1) % mealPool.length]['name']?.toString() ?? '-',
       ));
     }
     return plan;
