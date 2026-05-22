@@ -24,11 +24,15 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   late final TabController _tabController;
   bool _loading = true;
   String? _error;
-  List<Map<String, dynamic>> _all = [];
-  // 추천 API 원본 (이미 매칭률 내림차순 정렬). 만들수있는/즐겨찾기 탭은 이 위에서 필터.
+  // 추천 API 원본 (모든 레시피 + 매칭정보, 매칭률 내림차순 정렬).
+  // 전체 탭은 이 전체를, 만들수있는/즐겨찾기 탭은 이 위에서 필터해서 쓴다.
   List<Map<String, dynamic>> _recommended = [];
   // SharedPreferences에 저장된 AI 추천 결과 — 전체 탭 맨 위에 노출.
   List<SavedAiRecipe> _aiRecipes = [];
+  // 전체 탭 검색어 + 페이지, 만들수있는 탭 페이지 (8개씩 페이지네이션)
+  String _query = '';
+  int _allPage = 1;
+  int _matchPage = 1;
 
   List<Map<String, dynamic>> get _matches => _recommended
       .where((m) => ((m['hasIngredients'] as List?) ?? const []).isNotEmpty)
@@ -80,18 +84,14 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       _error = null;
     });
     try {
-      final futures = await Future.wait([
-        ApiClient.get('/api/recipes'),
-        ApiClient.get('/api/recipes/recommendations'),
-      ]);
-      if (futures[0].statusCode != 200 || futures[1].statusCode != 200) {
+      // 추천 API가 모든 레시피를 매칭정보와 함께 반환 — 전체/만들수있는/즐겨찾기 탭 모두 이걸로 충분.
+      final res = await ApiClient.get('/api/recipes/recommendations');
+      if (res.statusCode != 200) {
         setState(() => _error = '레시피 조회 실패');
         return;
       }
-      final all = (jsonDecode(utf8.decode(futures[0].bodyBytes)) as List).cast<Map<String, dynamic>>();
-      final recs = (jsonDecode(utf8.decode(futures[1].bodyBytes)) as List).cast<Map<String, dynamic>>();
+      final recs = (jsonDecode(utf8.decode(res.bodyBytes)) as List).cast<Map<String, dynamic>>();
       setState(() {
-        _all = all;
         _recommended = recs.toList()
           ..sort((a, b) => ((b['matchRate'] ?? 0) as num).compareTo((a['matchRate'] ?? 0) as num));
       });
@@ -113,9 +113,6 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
         for (final m in _recommended) {
           final r = m['recipe'];
           if (r is Map && r['id'] == recipeId) r['favorite'] = newState;
-        }
-        for (final r in _all) {
-          if (r['id'] == recipeId) r['favorite'] = newState;
         }
       });
     } catch (_) {
@@ -204,11 +201,18 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
   }
 
   Widget _allList() {
-    if (_all.isEmpty && _aiRecipes.isEmpty) {
-      return Center(
-          child: Text('등록된 레시피가 없습니다',
-              style: TextStyle(color: context.subTextColor)));
-    }
+    final q = _query.trim().toLowerCase();
+    final filtered = q.isEmpty
+        ? _recommended
+        : _recommended.where((m) {
+            final name = ((m['recipe'] as Map?)?['name'] ?? '').toString().toLowerCase();
+            return name.contains(q);
+          }).toList();
+    const pageSize = 8;
+    final totalPages = filtered.isEmpty ? 1 : (filtered.length / pageSize).ceil();
+    final page = _allPage <= totalPages ? _allPage : totalPages;
+    final pageItems = filtered.skip((page - 1) * pageSize).take(pageSize).toList();
+
     return RefreshIndicator(
       onRefresh: () async {
         await Future.wait([_fetch(), _loadAiRecipes()]);
@@ -216,13 +220,43 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          if (_aiRecipes.isNotEmpty) ...[
+          // 레시피 이름 검색
+          TextField(
+            decoration: InputDecoration(
+              hintText: '레시피 이름 검색',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              isDense: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onChanged: (v) => setState(() {
+              _query = v;
+              _allPage = 1;
+            }),
+          ),
+          const SizedBox(height: 12),
+          // 검색 중이 아닐 때만 AI 추천 섹션 노출
+          if (_aiRecipes.isNotEmpty && q.isEmpty) ...[
             _aiRecipesSection(),
             const SizedBox(height: 12),
             const Divider(height: 1),
             const SizedBox(height: 12),
           ],
-          ..._all.expand((r) => [_recipeCard(r, null), const SizedBox(height: 12)]),
+          if (filtered.isEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(q.isEmpty ? '등록된 레시피가 없습니다' : '검색 결과가 없습니다',
+                    style: TextStyle(color: context.subTextColor)),
+              ),
+            )
+          else ...[
+            ...pageItems.expand((m) {
+              final recipe = (m['recipe'] as Map).cast<String, dynamic>();
+              return [_recipeCard(recipe, m), const SizedBox(height: 12)];
+            }),
+            if (totalPages > 1)
+              _pagination(page, totalPages, (p) => setState(() => _allPage = p)),
+          ],
         ],
       ),
     );
@@ -334,17 +368,22 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
             textAlign: TextAlign.center, style: TextStyle(color: context.subTextColor)),
       ));
     }
+    const pageSize = 8;
+    final totalPages = (list.length / pageSize).ceil();
+    final page = _matchPage <= totalPages ? _matchPage : totalPages;
+    final pageItems = list.skip((page - 1) * pageSize).take(pageSize).toList();
     return RefreshIndicator(
       onRefresh: _fetch,
-      child: ListView.separated(
+      child: ListView(
         padding: const EdgeInsets.all(16),
-        itemCount: list.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (_, i) {
-          final m = list[i];
-          final recipe = (m['recipe'] as Map).cast<String, dynamic>();
-          return _recipeCard(recipe, m);
-        },
+        children: [
+          ...pageItems.expand((m) {
+            final recipe = (m['recipe'] as Map).cast<String, dynamic>();
+            return [_recipeCard(recipe, m), const SizedBox(height: 12)];
+          }),
+          if (totalPages > 1)
+            _pagination(page, totalPages, (p) => setState(() => _matchPage = p)),
+        ],
       ),
     );
   }
@@ -456,6 +495,41 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  // 페이지 번호 버튼들 (8개씩 페이지네이션 공용 — 전체/만들수있는 탭)
+  Widget _pagination(int current, int total, void Function(int) onTap) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 6,
+        runSpacing: 6,
+        children: [
+          for (int p = 1; p <= total; p++)
+            GestureDetector(
+              onTap: () => onTap(p),
+              child: Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: p == current ? _accentGreen : context.cardBg,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                      color: p == current ? _accentGreen : context.borderColor),
+                ),
+                child: Text('$p',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: p == current ? FontWeight.w700 : FontWeight.w500,
+                      color: p == current ? Colors.black : context.textColor,
+                    )),
+              ),
+            ),
+        ],
       ),
     );
   }
