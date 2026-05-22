@@ -22,6 +22,17 @@
 
 - `flutter build apk --release --dart-define=API_BASE_URL=https://naengbuhae.onrender.com`로 릴리스 APK 빌드 → 파일 공유로 사이드로드 배포 (스토어 미등록, 디버그 키 서명 — 시연/배포용)
 
+### 레시피 추천 — 전체 탭 수정 + 검색·페이지네이션
+
+- `recipes_screen.dart` — "전체" 탭이 `/api/recipes`(본인 등록 레시피만, 사실상 빈 목록)를 보던 것을 `/api/recipes/recommendations`(모든 레시피)로 변경 → 시드 레시피 76개가 전체 탭에 보이게 됨
+- 레시피 이름 **검색** + **8개씩 페이지네이션** (게시판식 5개 블록, ‹ ›로 블록 이동)
+- 탭 라벨에 개수 표시 — `전체 (76)` · `만들 수 있는 (N)` · `즐겨찾기 (N)`
+
+### 식단 추천 — AI 연동
+
+- `meal_plan_screen.dart` — 끼니 메뉴가 매일 반복되던 버그 수정 (`firstWhere`로 아침·점심을 첫 레시피로 고정하던 것)
+- **AI 식단** — `POST /api/recipes/meal-plan`(백엔드 Gemini)으로 끼니 적합성·다양성을 고려한 식단을 백그라운드로 받아 표시. 실패 시 규칙 기반 순환으로 fallback
+
 ---
 
 ## 이전 작업 정리 (2026-05-20)
