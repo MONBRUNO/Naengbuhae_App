@@ -499,14 +499,15 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
     );
   }
 
-  // 페이지 번호 버튼 — 한 줄 유지를 위해 현재 페이지 주변 최대 5개만 노출 + 이전/다음 화살표.
+  // 페이지 번호 — 게시판식 5개 블록 ([1-5] [6-10] ...). 끝 번호를 눌러도 블록은
+  // 그대로, ‹ ›로 이전/다음 블록으로 이동.
   Widget _pagination(int current, int total, void Function(int) onTap) {
-    const window = 5;
-    int start = current - 2;
-    if (start > total - window + 1) start = total - window + 1;
-    if (start < 1) start = 1;
-    int end = start + window - 1;
-    if (end > total) end = total;
+    const block = 5;
+    final start = ((current - 1) ~/ block) * block + 1;
+    final last = start + block - 1;
+    final end = last > total ? total : last;
+    final hasPrev = start > 1;
+    final hasNext = end < total;
 
     Widget cell({required Widget child, required bool active, VoidCallback? onTap}) {
       return GestureDetector(
@@ -532,10 +533,10 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
         children: [
           cell(
             active: false,
-            onTap: current > 1 ? () => onTap(current - 1) : null,
+            onTap: hasPrev ? () => onTap(start - 1) : null,
             child: Icon(Icons.chevron_left,
                 size: 18,
-                color: current > 1 ? context.textColor : context.hintTextColor),
+                color: hasPrev ? context.textColor : context.hintTextColor),
           ),
           const SizedBox(width: 6),
           for (int p = start; p <= end; p++) ...[
@@ -553,10 +554,10 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
           ],
           cell(
             active: false,
-            onTap: current < total ? () => onTap(current + 1) : null,
+            onTap: hasNext ? () => onTap(end + 1) : null,
             child: Icon(Icons.chevron_right,
                 size: 18,
-                color: current < total ? context.textColor : context.hintTextColor),
+                color: hasNext ? context.textColor : context.hintTextColor),
           ),
         ],
       ),
