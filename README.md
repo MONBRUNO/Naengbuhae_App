@@ -7,7 +7,24 @@
 
 ---
 
-## 🆕 이번 작업 정리 (2026-05-20)
+## 🆕 이번 작업 정리 (2026-05-22)
+
+### 구글 로그인 — 외부 브라우저로 전환
+
+구글이 임베디드 WebView OAuth를 `disallowed_useragent`로 차단해, 인앱 WebView로는 구글 로그인이 불가능했다 (카카오·네이버는 WebView로 정상 동작).
+
+- `flutter_web_auth_2` 패키지 추가 — **구글 로그인만** 외부 브라우저(Chrome Custom Tab)로 진행
+- `login_screen.dart` — `provider == 'google'`이면 `FlutterWebAuth2.authenticate()`로, 콜백은 `naengbuhae://` 커스텀 스킴으로 수신. 카카오·네이버는 기존 `OAuthWebViewScreen` 그대로
+- `AndroidManifest.xml` — `naengbuhae` 스킴용 `com.linusu.flutter_web_auth_2.CallbackActivity` intent-filter 등록
+- 백엔드가 `/oauth2/authorization/google?client=app` 요청을 쿠키로 식별해 앱엔 커스텀 스킴으로 콜백을 돌려줌 ([백엔드 README](https://github.com/impactice/Naengbuhae_Team_backend) 참고)
+
+### 무료 APK 배포
+
+- `flutter build apk --release --dart-define=API_BASE_URL=https://naengbuhae.onrender.com`로 릴리스 APK 빌드 → 파일 공유로 사이드로드 배포 (스토어 미등록, 디버그 키 서명 — 시연/배포용)
+
+---
+
+## 이전 작업 정리 (2026-05-20)
 
 ### AI 통합 (capstone-ai FastAPI 서버 결합)
 
