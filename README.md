@@ -2,7 +2,7 @@
 
 냉부해 모바일 앱 (Flutter).
 
-> 백엔드: [`Naengbuhae_Team_backend`](https://github.com/impactice/Naengbuhae_Team_backend) (`chore/db-setting` 브랜치)
+> 백엔드: [`Naengbuhae_Team_backend`](https://github.com/impactice/Naengbuhae_Team_backend) (`develop` 브랜치, Render 배포: `https://naengbuhae.onrender.com`)
 > 웹: [`Naengbuhae_Team`](https://github.com/impactice/Naengbuhae_Team)
 
 ---
@@ -702,10 +702,17 @@ flutter run --host-vmservice-port=8888 --disable-service-auth-codes
 | 환경 | baseUrl |
 |---|---|
 | Android 에뮬레이터 | `http://10.0.2.2:8080` (호스트의 localhost) |
-| iOS 시뮬레이터 | `http://localhost:8080` |
-| 실기기 | 같은 네트워크의 PC IP 또는 ngrok URL — 코드 직접 수정 필요 |
+| iOS 시뮬레이터 / 데스크톱 | `http://localhost:8080` |
+| 실기기 / 배포 서버 | `--dart-define=API_BASE_URL=...` 로 주입 |
 
-> 실기기 테스트 시 PC IP로 변경하고 PC 방화벽에서 8080 허용 필요.
+배포된 백엔드(또는 실기기)를 쓰려면 빌드 시 `--dart-define`으로 override:
+
+```bash
+flutter run --dart-define=API_BASE_URL=https://naengbuhae.onrender.com
+flutter build apk --dart-define=API_BASE_URL=https://naengbuhae.onrender.com
+```
+
+`API_BASE_URL`이 비어있으면 위 표의 플랫폼별 기본값으로 폴백. 실기기를 로컬 PC 백엔드에 붙이려면 `--dart-define=API_BASE_URL=http://<PC_LAN_IP>:8080` (PC 방화벽 8080 허용 필요).
 
 ## 디렉토리 구조
 
