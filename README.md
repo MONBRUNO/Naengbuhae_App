@@ -7,6 +7,24 @@
 
 ---
 
+## 📦 APK (설치 파일)
+
+배포된 백엔드(`https://naengbuhae.onrender.com`)에 연결되는 릴리스 APK를 빌드해 사이드로드로 배포합니다 (스토어 미등록).
+
+**빌드 명령**
+```bash
+flutter build apk --release --dart-define=API_BASE_URL=https://naengbuhae.onrender.com
+```
+
+**빌드 결과 APK 위치**
+```
+build/app/outputs/flutter-apk/app-release.apk
+```
+
+이 `app-release.apk` 파일을 폰으로 옮겨(카톡 "나에게 보내기" · 구글 드라이브 · USB) 탭한 뒤, "이 출처의 앱 설치 허용"을 켜고 설치하면 됩니다. (디버그 키 서명 — 시연·배포용)
+
+---
+
 ## 🆕 이번 작업 정리 (2026-05-22)
 
 ### 구글 로그인 — 외부 브라우저로 전환
