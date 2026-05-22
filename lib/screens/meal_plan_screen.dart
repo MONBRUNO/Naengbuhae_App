@@ -46,7 +46,7 @@ class MealPlanScreen extends StatefulWidget {
 class _MealPlanScreenState extends State<MealPlanScreen> {
   bool _loading = true;
   String? _error;
-  List<Map<String, dynamic>> _recipes = [];
+  // 추천 API 응답 (모든 레시피 + 매칭정보). 식단은 이걸로 생성.
   List<Map<String, dynamic>> _matches = [];
   bool _hasIngredients = true;
   int _selectedDays = 7;
@@ -64,19 +64,16 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
     });
     try {
       final results = await Future.wait([
-        ApiClient.get('/api/recipes'),
         ApiClient.get('/api/recipes/recommendations'),
         ApiClient.get('/api/ingredients'),
       ]);
-      if (results[0].statusCode != 200 || results[1].statusCode != 200) {
+      if (results[0].statusCode != 200) {
         setState(() => _error = '레시피 조회 실패');
         return;
       }
-      final recs = (jsonDecode(utf8.decode(results[0].bodyBytes)) as List).cast<Map<String, dynamic>>();
-      final matches = (jsonDecode(utf8.decode(results[1].bodyBytes)) as List).cast<Map<String, dynamic>>();
-      final ingredients = (jsonDecode(utf8.decode(results[2].bodyBytes)) as List);
+      final matches = (jsonDecode(utf8.decode(results[0].bodyBytes)) as List).cast<Map<String, dynamic>>();
+      final ingredients = (jsonDecode(utf8.decode(results[1].bodyBytes)) as List);
       setState(() {
-        _recipes = recs;
         _matches = matches;
         _hasIngredients = ingredients.isNotEmpty;
       });
@@ -97,42 +94,46 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
   }
 
   List<_MealPlanItem> _generateMealPlan() {
-    if (_recipes.isEmpty) return [];
+    if (_matches.isEmpty) return [];
 
-    final makeable = _matches
-        .where((m) => ((m['matchRate'] ?? 0) as num) >= 50)
+    // 매칭률 높은 순 정렬 — 만들기 쉬운 레시피가 앞쪽.
+    final sorted = _matches.toList()
+      ..sort((a, b) =>
+          ((b['matchRate'] ?? 0) as num).compareTo((a['matchRate'] ?? 0) as num));
+    final allRecipes = sorted
         .map((m) => (m['recipe'] as Map).cast<String, dynamic>())
         .toList();
+    if (allRecipes.isEmpty) return [];
 
-    Map<String, dynamic>? findByCategory(List<String> categories) {
-      try {
-        return makeable.firstWhere((r) => categories.contains(r['category']?.toString()));
-      } catch (_) {
-        return null;
-      }
-    }
+    List<Map<String, dynamic>> inCats(List<String> cats) => allRecipes
+        .where((r) => cats.contains(r['category']?.toString()))
+        .toList();
 
-    final breakfastBase = findByCategory(['간식', '음료']) ?? (_recipes.isNotEmpty ? _recipes[0] : null);
-    final lunchBase = findByCategory(['밥/면', '반찬']) ?? (_recipes.length > 1 ? _recipes[1] : (_recipes.isNotEmpty ? _recipes[0] : null));
+    // 아침: 간식·음료(가벼운 끼니). 점심·저녁: 밥/면·반찬·기타·샐러드. 적으면 전체로 폴백.
+    var breakfastPool = inCats(['간식', '음료']);
+    if (breakfastPool.length < 2) breakfastPool = allRecipes;
+    var mealPool = inCats(['밥/면', '반찬', '기타', '샐러드']);
+    if (mealPool.length < 4) mealPool = allRecipes;
 
     final plan = <_MealPlanItem>[];
     for (var i = 0; i < _selectedDays; i++) {
-      final dinner = makeable.isNotEmpty
-          ? makeable[(i * 2) % makeable.length]
-          : (_recipes.length > 2 ? _recipes[2] : (_recipes.isNotEmpty ? _recipes.last : null));
+      final breakfast = breakfastPool[i % breakfastPool.length];
+      // 점심·저녁은 서로 다른 인덱스 — 같은 날 중복 방지 + 요일별 순환
+      final lunch = mealPool[(i * 2) % mealPool.length];
+      final dinner = mealPool[(i * 2 + 1) % mealPool.length];
 
-      final bn = (breakfastBase?['nutrition'] as Map?)?.cast<String, dynamic>();
-      final ln = (lunchBase?['nutrition'] as Map?)?.cast<String, dynamic>();
-      final dn = (dinner?['nutrition'] as Map?)?.cast<String, dynamic>();
+      final bn = (breakfast['nutrition'] as Map?)?.cast<String, dynamic>();
+      final ln = (lunch['nutrition'] as Map?)?.cast<String, dynamic>();
+      final dn = (dinner['nutrition'] as Map?)?.cast<String, dynamic>();
 
       double sum(String key) =>
           _num(bn?[key]) + _num(ln?[key]) + _num(dn?[key]);
 
       plan.add(_MealPlanItem(
         day: _daysOfWeek[i % 7],
-        breakfast: breakfastBase?['name']?.toString() ?? '-',
-        lunch: lunchBase?['name']?.toString() ?? '-',
-        dinner: dinner?['name']?.toString() ?? '-',
+        breakfast: breakfast['name']?.toString() ?? '-',
+        lunch: lunch['name']?.toString() ?? '-',
+        dinner: dinner['name']?.toString() ?? '-',
         totalCalories: sum('calories'),
         totalProtein: sum('protein'),
         totalCarbs: sum('carbs'),
