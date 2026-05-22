@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_web_auth_2/flutter_web_auth_2.dart';
 import 'package:simple_icons/simple_icons.dart';
 
 import '../api/api_client.dart';
@@ -333,9 +334,16 @@ class _LoginScreenState extends State<LoginScreen> {
   // 메인으로 이동. 추가 정보가 필요한 경우 백엔드가 needsAdditionalInfo=true로 알려주는데
   // 일단 메인에서 프로필 미완성 배너로 노출되므로 별도 분기 없이 진입.
   Future<void> _socialLogin(String provider) async {
-    final result = await Navigator.of(context).push<OAuthResult>(
-      MaterialPageRoute(builder: (_) => OAuthWebViewScreen(provider: provider)),
-    );
+    // 구글은 임베디드 WebView OAuth를 차단(disallowed_useragent)하므로 외부 브라우저로,
+    // 카카오·네이버는 기존대로 인앱 WebView로 진행.
+    final OAuthResult? result;
+    if (provider == 'google') {
+      result = await _googleLoginViaBrowser();
+    } else {
+      result = await Navigator.of(context).push<OAuthResult>(
+        MaterialPageRoute(builder: (_) => OAuthWebViewScreen(provider: provider)),
+      );
+    }
     if (result == null) return; // 사용자가 도중에 닫음
 
     await AuthStorage.save(
@@ -352,5 +360,32 @@ class _LoginScreenState extends State<LoginScreen> {
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const MainScaffold()),
     );
+  }
+
+  // 구글 로그인 — 외부 브라우저(Custom Tab)로 진행.
+  // 백엔드 /oauth2/authorization/google?client=app 을 열면, 백엔드가 oauth_client=app 쿠키를
+  // 보고 naengbuhae:// 커스텀 스킴으로 토큰을 돌려준다 (구글은 임베디드 WebView OAuth를 막음).
+  Future<OAuthResult?> _googleLoginViaBrowser() async {
+    try {
+      final callbackUrl = await FlutterWebAuth2.authenticate(
+        url: '${ApiClient.baseUrl}/oauth2/authorization/google?client=app',
+        callbackUrlScheme: 'naengbuhae',
+      );
+      final uri = Uri.parse(callbackUrl);
+      final token = uri.queryParameters['token'];
+      final refreshToken = uri.queryParameters['refreshToken'];
+      if (token == null || refreshToken == null) {
+        _showSnackBar('구글 로그인 실패: ${uri.queryParameters['error'] ?? 'unknown'}');
+        return null;
+      }
+      return OAuthResult(
+        accessToken: token,
+        refreshToken: refreshToken,
+        needsAdditionalInfo: uri.queryParameters['needsAdditionalInfo'] == 'true',
+      );
+    } catch (_) {
+      // 사용자가 브라우저 탭을 닫으면 PlatformException(CANCELED) — 조용히 무시
+      return null;
+    }
   }
 }

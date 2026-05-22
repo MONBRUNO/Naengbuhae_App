@@ -41,6 +41,20 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- flutter_web_auth_2 콜백 — 구글 로그인을 외부 브라우저(Custom Tab)로 진행 후
+             naengbuhae:// 커스텀 스킴으로 앱에 복귀 -->
+        <activity
+            android:name="com.linusu.flutter_web_auth_2.CallbackActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth_2">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="naengbuhae" />
+            </intent-filter>
+        </activity>
+
         <!-- 로컬 알림 부팅 후 재예약 receiver (flutter_local_notifications 제공) -->
         <receiver
             android:exported="false"
