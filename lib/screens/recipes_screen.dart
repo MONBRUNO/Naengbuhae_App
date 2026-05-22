@@ -144,7 +144,7 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
           labelColor: context.textColor,
           unselectedLabelColor: context.subTextColor,
           tabs: [
-            const Tab(text: '전체'),
+            Tab(text: '전체 (${_recommended.length})'),
             Tab(text: '만들 수 있는 (${_matches.length})'),
             Tab(text: '즐겨찾기 (${_favorites.length})'),
           ],
