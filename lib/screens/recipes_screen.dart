@@ -499,36 +499,65 @@ class _RecipesScreenState extends State<RecipesScreen> with SingleTickerProvider
     );
   }
 
-  // 페이지 번호 버튼들 (8개씩 페이지네이션 공용 — 전체/만들수있는 탭)
+  // 페이지 번호 버튼 — 한 줄 유지를 위해 현재 페이지 주변 최대 5개만 노출 + 이전/다음 화살표.
   Widget _pagination(int current, int total, void Function(int) onTap) {
+    const window = 5;
+    int start = current - 2;
+    if (start > total - window + 1) start = total - window + 1;
+    if (start < 1) start = 1;
+    int end = start + window - 1;
+    if (end > total) end = total;
+
+    Widget cell({required Widget child, required bool active, VoidCallback? onTap}) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: active ? _accentGreen : context.cardBg,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: active ? _accentGreen : context.borderColor),
+          ),
+          child: child,
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.only(top: 8, bottom: 4),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 6,
-        runSpacing: 6,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          for (int p = 1; p <= total; p++)
-            GestureDetector(
+          cell(
+            active: false,
+            onTap: current > 1 ? () => onTap(current - 1) : null,
+            child: Icon(Icons.chevron_left,
+                size: 18,
+                color: current > 1 ? context.textColor : context.hintTextColor),
+          ),
+          const SizedBox(width: 6),
+          for (int p = start; p <= end; p++) ...[
+            cell(
+              active: p == current,
               onTap: () => onTap(p),
-              child: Container(
-                width: 34,
-                height: 34,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: p == current ? _accentGreen : context.cardBg,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                      color: p == current ? _accentGreen : context.borderColor),
-                ),
-                child: Text('$p',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: p == current ? FontWeight.w700 : FontWeight.w500,
-                      color: p == current ? Colors.black : context.textColor,
-                    )),
-              ),
+              child: Text('$p',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: p == current ? FontWeight.w700 : FontWeight.w500,
+                    color: p == current ? Colors.black : context.textColor,
+                  )),
             ),
+            const SizedBox(width: 6),
+          ],
+          cell(
+            active: false,
+            onTap: current < total ? () => onTap(current + 1) : null,
+            child: Icon(Icons.chevron_right,
+                size: 18,
+                color: current < total ? context.textColor : context.hintTextColor),
+          ),
         ],
       ),
     );
