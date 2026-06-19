@@ -7,7 +7,7 @@ import '../services/notification_service.dart';
 import '../utils/format.dart';
 import '../utils/theme_colors.dart';
 import '../widgets/bar_chart.dart';
-import 'recipes_screen.dart';
+import 'recipe_detail_screen.dart';
 
 const _accentGreen = Color(0xFFCDFF00);
 
@@ -476,32 +476,24 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           const SizedBox(height: 12),
           Divider(height: 1, color: context.borderColor),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Text('단백질 ${day.totalProtein.toInt()}g',
-                  style: TextStyle(fontSize: 12, color: context.subTextColor)),
-              const Spacer(),
-              GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const RecipesScreen()),
-                ),
-                child: Row(
-                  children: const [
-                    Text('레시피 보기',
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-                    Icon(Icons.chevron_right, size: 14),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          Text('단백질 ${day.totalProtein.toInt()}g',
+              style: TextStyle(fontSize: 12, color: context.subTextColor)),
         ],
       ),
     );
   }
 
+  Map<String, dynamic>? _recipeByName(String name) {
+    for (final m in _matches) {
+      final r = (m['recipe'] as Map?)?.cast<String, dynamic>();
+      if (r != null && r['name']?.toString() == name) return r;
+    }
+    return null;
+  }
+
   Widget _mealRow(String label, String meal) {
-    return Padding(
+    final recipe = _recipeByName(meal);
+    final row = Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
@@ -511,8 +503,17 @@ class _MealPlanScreenState extends State<MealPlanScreen> {
           Expanded(
             child: Text(meal, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
           ),
+          if (recipe != null)
+            Icon(Icons.chevron_right, size: 14, color: context.subTextColor),
         ],
       ),
+    );
+    if (recipe == null) return row;
+    return InkWell(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => RecipeDetailScreen(recipe: recipe)),
+      ),
+      child: row,
     );
   }
 }

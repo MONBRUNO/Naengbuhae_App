@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../state/guest_mode.dart';
@@ -21,6 +22,7 @@ class ApiClient {
   static String get baseUrl {
     const override = String.fromEnvironment('API_BASE_URL');
     if (override.isNotEmpty) return override;
+    if (kReleaseMode) return 'https://naengbuhae.onrender.com';
     if (Platform.isAndroid) return 'http://10.0.2.2:8080';
     return 'http://localhost:8080';
   }
